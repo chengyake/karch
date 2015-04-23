@@ -1,0 +1,13 @@
+<resources>
+
+    <string name="app_name">AndroidFileChooser</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="open_file_failed">文件打开失败</string>
+    <string name="open_file_error_format">文件格式不正确</string>
+    <string name="open_file_none">您没有选择任何文件</string>
+    <string name="empty_hint">文件夹为空</string>
+    <string name="sdcard_unmonted_hint">请先挂载SD卡</string>
+
+</resources>

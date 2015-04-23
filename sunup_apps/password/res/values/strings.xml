@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KEY</string>
+    <string name="gen">Generate</string>
+    <string name="inp">Input Serial</string>
+</resources>

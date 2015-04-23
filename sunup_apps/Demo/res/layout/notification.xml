@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+
+	<Button
+		android:id="@+id/sum_1"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/shihe"/>
+		
+	<Button
+		android:id="@+id/cloudy_1"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/butaishihe"/>
+		
+	<Button
+		android:id="@+id/rain_1"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/yidianeryebushihe"/>
+		
+		
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/gaojitishi"/>
+		
+	<Button
+		android:id="@+id/defaultSound"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/youtishisheng"/>
+		
+	<Button
+		android:id="@+id/defaultVibrate"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/zhendongtishi"/>
+		
+	<Button
+		android:id="@+id/defaultAll"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/shengyinzhendongtishi"/>
+	
+	<Button
+		android:id="@+id/clear"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/qingchutishi"/>									
+			
+</LinearLayout>
+

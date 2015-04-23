@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="21"
+   name=""
+   committed-date="2012-11-22T07:32:53.843750Z"
+   url="https://192.168.1.114:444/svn/team4/OliveRemoteDisplayClient/res/values-zh-rCN"
+   last-author="jun.qin"
+   kind="dir"
+   uuid="548a11bf-6be6-784b-ac5b-2cb8869fa498"
+   repos="https://192.168.1.114:444/svn/team4"
+   revision="57"/>
+<entry
+   committed-rev="94"
+   name="strings.xml"
+   text-time="2012-11-28T07:39:09.243326Z"
+   committed-date="2012-11-29T01:49:33.796875Z"
+   checksum="498b6aed0a9664d45bf81a94295f765e"
+   last-author="jun.qin"
+   kind="file"
+   prop-time="2012-11-23T02:42:56.705127Z"
+   revision="94"/>
+</wc-entries>

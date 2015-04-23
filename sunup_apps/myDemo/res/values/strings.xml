@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">基本布局、组件！！！</string>
+    <string name="app_name">基础组件测试</string>
+    
+    <string name="frameLayout">FrameLayout</string>
+    <string name="relativeLayout">RelativeLayout</string>
+    <string name="relativeAndLinear">RelativeAndLinear</string>
+    <string name="tableLayout">TableLayout</string>
+    <string name="tabWidget">选项卡TabWidget</string>
+    <string name="checkbox">CheckBox多选框</string>
+    <string name="radioGroup">RadioGroup单选框</string>
+    <string name="spinner">Spinner下拉框</string>
+    <string name="autoCompleteTextView">AutoCompleteTextView</string>
+    <string name="datePicker">Date、TimePicker</string>
+    <string name="progressBar">ProgressBar进度条</string>
+    <string name="ratingBar">RatingBar投票</string>
+    <string name="imageShow">ImageSwitcher、Gallery</string>
+    <string name="gridView">GridView网络视图</string>
+    <string name="tab">Tab标签</string>
+    <string name="optionsMenu">OptionsMenu</string>
+	<string name="contextMenu">ContextMenu</string>
+    <string name="subMenu">SubMenu</string>
+    <string name="bundle">Activity值传递</string>
+    <string name="alertDialog">4种AlertDialog</string>
+    <string name="alertDialog1">有两个button的对话框1</string>
+    <string name="alertDialog2">有三个button的对话框2</string>
+    <string name="alertDialog3">能进行输入的对话框</string>
+    <string name="alertDialog4">进度框</string>
+    <string name="notification">Notification</string>
+        
+    <string name="menu_button1">第一个按钮</string>
+    <string name="menu_button2">第二个按钮</string>
+    
+    <string name="ok">确定</string>
+    <string name="startButton">开始</string>
+    <string name="stopButton">暂停</string>
+    
+    <drawable name="blue">#770000ff</drawable>
+    <drawable name="yellow">#77ffff00</drawable>
+    <drawable name="red">#00FF99</drawable>
+
+
+    <!--add by chengyake-->
+    <string name="inputname">输 入 姓 名</string>
+    <string name="inputpass">输 入 密 码</string>
+    <string name="pinput">请 输 入</string>
+    <string name="clear">清 空</string>
+
+    <string name="accwight">计算你的体重</string>
+    <string name="boyorgirl">性别</string>
+    <string name="shengao">身高</string>
+    <string name="boy">男</string>
+    <string name="girl">女</string>
+    <string name="acc">计算</string>
+    <string name="back">返回</string>
+
+    <string name="duoxuankongjian">多选控件</string>
+    <string name="huoqucheckbox">获取checkbox</string>
+    <string name="AA">AA</string>
+    <string name="BB">BB</string>
+    <string name="CC">CC</string>
+    <string name="DD">DD</string>
+    <string name="changanchufa">长按触发</string>
+    <string name="huoquriqi">获取日期</string>
+
+    <string name="shihe">适合</string>
+    <string name="butaishihe">不太适合</string>
+    <string name="yidianeryebushihe">一点儿也不适合</string>
+    <string name="gaojitishi">notification高级提示：声音、震动调试失败！！！</string>
+    <string name="youtishisheng">有提示声音</string>
+    <string name="zhendongtishi">有振动提示</string>
+    <string name="shengyinzhendongtishi">声音振动提示</string>
+    <string name="qingchutishi">清除提示</string>
+    <string name="pingfen">RatingBar评分组件</string>
+    <string name="zhanshitupian">展现图片</string>
+    <string name="tupiananniu">图片按钮</string>
+    <string name="cancel">取消</string>
+    <string name="aa">第a组第a项</string>
+    <string name="ab">第a组第b项</string>
+    <string name="xialakuang1">下拉框1</string>
+    <string name="xialakuang2">下拉框2</string>
+    <string name="submenu">子菜单操作</string>
+    <string name="user">用户名</string>
+    <string name="pass">密码</string>
+    <string name="tab1">第一个tab</string>
+    <string name="tab2">第er个tab</string>
+    <string name="tab3">第san个tab</string>
+    <string name="ntab1">内容tab1</string>
+    <string name="ntab2">内容tab2</string>
+    <string name="ntab3">内容tab3</string>
+
+
+</resources>

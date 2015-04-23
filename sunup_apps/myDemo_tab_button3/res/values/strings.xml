@@ -1,0 +1,17 @@
+<resources>
+
+    <string name="app_name">AndroidFileChooser</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="open_file_error_format">The format of file is error</string>
+    <string name="open_file_none">"You don't choose any file"</string>
+    <string name="empty_hint">The directory is empty</string>
+    <string name="sdcard_unmonted_hint">Please mount the sdcard at first</string>
+
+
+    <string name="back">back</string>
+    <string name="exit">exit</string>
+    <string name="chose">chose</string>
+
+</resources>

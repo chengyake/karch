@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+
+
+    <TextView
+        android:id="@+id/mainmenu"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        android:gravity="left"
+        android:text="@string/mainmenu"
+    />
+    <View  
+        android:layout_width="fill_parent"  
+        android:layout_height="2px" 
+        android:background="?android:attr/listDivider"  
+    />  
+
+    <GridView xmlns:android="http://schemas.android.com/apk/res/android" 
+        android:id="@+id/gridview"
+        android:layout_width="fill_parent" 
+        android:layout_height="wrap_content"
+        android:numColumns="2"
+        android:verticalSpacing="10dp"
+        android:horizontalSpacing="10dp"
+        android:columnWidth="90dp"
+        android:stretchMode="columnWidth"
+        android:gravity="center"
+    />
+
+    <TextView
+        android:id="@+id/maininfo"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        android:gravity="left"
+        android:text="@string/maininfo"
+    />
+    <View  
+        android:layout_width="fill_parent"  
+        android:layout_height="2px" 
+        android:background="?android:attr/listDivider"  
+    />  
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        >
+    	<TextView
+    		android:id="@+id/pusinfo"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    	<TextView
+    		android:id="@+id/puscontent"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        >
+    	<TextView
+    		android:id="@+id/puminfo"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    	<TextView
+    		android:id="@+id/pumcontent"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        >
+    	<TextView
+    		android:id="@+id/jobinfo"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    	<TextView
+    		android:id="@+id/jobcontent"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content" 
+        android:layout_height="wrap_content" 
+        >
+    	<TextView
+    		android:id="@+id/jobdateinfo"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    	<TextView
+    		android:id="@+id/jobdatecontent"
+    	    android:layout_width="wrap_content" 
+    	    android:layout_height="wrap_content" 
+            android:gravity="center"
+    	    android:text="@string/hello"
+    	    />
+    </LinearLayout>
+
+    <TextView
+    	android:id="@+id/copyright"
+        android:layout_width="fill_parent" 
+        android:layout_height="fill_parent" 
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:text="@string/copyright"
+        />
+
+</LinearLayout>
+
+
+

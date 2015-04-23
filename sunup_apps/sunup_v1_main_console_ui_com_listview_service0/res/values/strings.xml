@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, MainActivity!</string>
+    <string name="app_name">U2S</string>
+    <string name="commit">Commit</string>
+    <string name="inputtext">Please Input Text</string>
+
+    <string name="addr">address</string>
+    <string name="old_v">old value</string>
+    <string name="new_v">new value</string>
+
+    <string name="mainmenu">MainMenu</string>
+    <string name="maininfo">MainInfo</string>
+    <string name="ok">ok</string>
+    <string name="copyright">Copyright by SUNUP ver1.00</string>
+    <string name="value0">00</string>
+    <string name="addr0">00000000</string>
+
+
+    <string name="upload">upload</string>
+    <string name="download">download</string>
+    <string name="pageup">pageup</string>
+    <string name="pagedown">pagedown</string>
+
+
+    <string name="inputaddr">addr:</string>
+    <string name="inputsize">size:</string>
+
+
+    <string name="keyA">A</string>
+    <string name="keyB">B</string>
+    <string name="keyC">C</string>
+    <string name="keyD">D</string>
+    <string name="keyE">E</string>
+    <string name="keyF">F</string>
+    <string name="key1">1</string>
+    <string name="key2">2</string>
+    <string name="key3">3</string>
+    <string name="key4">4</string>
+    <string name="key5">5</string>
+    <string name="key6">6</string>
+    <string name="key7">7</string>
+    <string name="key8">8</string>
+    <string name="key9">9</string>
+    <string name="key0">0</string>
+
+
+
+
+
+    <string name="Time">Time</string>
+    <string name="Code">Code</string>
+    <string name="Status">Status</string>
+    <string name="SUPPDATA">SUPPDATA</string>
+
+    <string name="Time_v">00-00-00 00:00:00</string>
+    <string name="Code_v">0000</string>
+    <string name="Status_v">00 00 00 00 00 00 00</string>
+    <string name="SUPPDATA_v">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</string>
+
+
+
+
+    <string name="keyerr">All Error</string>
+    <string name="keydel">DEL</string>
+    <string name="keyfileout">File out</string>
+
+
+    <string name="fileadd">File Add</string>
+    <string name="chosetime">chosetime</string>
+    <string name="chosedate">chosedate</string>
+    <string name="timedate">time date</string>
+
+    <string name="times">times:</string>
+    <string name="password">password:</string>
+    <string name="clpwbutton">CLPW</string>
+
+
+</resources>
+

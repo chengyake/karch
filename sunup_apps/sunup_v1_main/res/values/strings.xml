@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, MainActivity!</string>
+    <string name="app_name">U2S</string>
+    <string name="commit">Commit</string>
+    <string name="inputtext">Please Input Text</string>
+
+
+    <string name="mainmenu">MainMenu</string>
+    <string name="maininfo">MainInfo</string>
+    <string name="ok">ok</string>
+    <string name="copyright">Copyright by SUNUP ver1.00</string>
+</resources>
