@@ -8,10 +8,14 @@ E、进程控制：有些进程希望完全控制另一个进程的执行（如D
 
 
 Linux 进程间通信（IPC）以下以几部分发展而来：
-早期UNIX进程间通信、基于System V进程间通信、基于Socket进程间通信和POSIX进程间通信。
-UNIX进程间通信方式包括：管道、FIFO、信号。
+1. 早期UNIX进程间通信、
+2. 基于System V进程间通信(AT&T)、
+3. 基于Socket进程间通信和POSIX进程间通信(BSD)。
+
+早期UNIX进程间通信方式包括：管道、FIFO、信号。
 System V进程间通信方式包括：System V消息队列、System V信号灯、System V共享内存、
-POSIX进程间通信包括：posix消息队列、posix信号灯、posix共享内存。
+POSIX进程间通信包括       ：posix消息队列、posix信号灯、posix共享内存、SOCKT套接字
+
 
 现在linux使用的进程间通信方式：
 （1）管道（pipe）和有名管道（FIFO）
@@ -20,3 +24,7 @@ POSIX进程间通信包括：posix消息队列、posix信号灯、posix共享内
 （4）共享内存
 （5）信号量
 （6）套接字（socket)
+
+
+
+
