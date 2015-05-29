@@ -16,7 +16,7 @@
        |                          V
        |                       accept()
        |      setup connection    |
-   connect() <------------------> |
+   connect() <-----------------> wait...
        |                          |
        V         request data     V
     write()  <-----------------> read()
