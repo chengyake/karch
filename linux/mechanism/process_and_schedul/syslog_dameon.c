@@ -22,7 +22,7 @@ int main()
 	exit(0);
 
 
-	openlog("demo_update",LOG_PID, LOG_DAEMON);
+	openlog("demo_update",LOG_PID|LOG_PERROR, LOG_USER);
 	if((sid=setsid())<0){
 		syslog(LOG_ERR, "%s\n", "setsid");
 		exit(1);
