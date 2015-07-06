@@ -1,0 +1,474 @@
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ ./a.out 
+client[3751]: attach framework core, connect to 61.237.239.183:55555
+client[3751]: attach remote server success, setup client event loop
+client[3751]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=1 task_state= 103 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x4CF2CED5F4A0BCD23996551B8A379F46
+	end: 0xFF
+	---------------------
+client[3751]: reg task process
+
+	fe47000000000001650000000000000000000000000000000000fffe43005200480033003800300042004a002d0030003300300031003866fcdb3792f36548600b52f4a06bcbff
+	---------------------
+	header:
+	head:0xFE len:71 token:0x00000000
+	task_type=1 task_state= 101 task_id:0x00000000000000000000000000000000
+	28 bytes data:0xFFFE43005200480033003800300042004A002D003000330030003100
+	MD5:0x3866FCDB3792F36548600B52F4A06BCB
+	end: 0xFF
+	---------------------
+select timeout: sec = 300 usec = 0
+client[3751]: client data changed after
+client[3751]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000000
+	task_type=1 task_state= 102 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x69DBD10B70D5BEAB5332C261323B2582
+	end: 0xFF
+	---------------------
+client[3751]: reg task process
+client[3751]: reg task success
+select timeout: sec = 299 usec = 819111
+client[3751]: client data changed after
+client[3751]: client data changed
+	---------------------
+	header:
+	head:0xFE len:167 token:0x00000002
+	task_type=2 task_state= 200 task_id:0xE723ED0D39B31848AC8CE413A05480E3
+	124 bytes data:0x2C000000000010270000009EF996D985D28800FCC949DA85D28801000000000CE4BAACE5B9BFE9AB98E9938150000101000000000CE4BAACE5B9BFE9AB98E993810000010002000300040005000600070111010208313131313131313114000000000000000A00000003080009000A000B000C000D000E000F001000
+	MD5:0x7FDCF00953576213500F54E555A7E3FE
+	end: 0xFF
+	---------------------
+client[3751]: test task process
+	---------------------
+	len:	44
+	position:	init=0 start=0 stop=10000
+	time:	start=1436169900 stop=1436170200
+	start time is: Mon Jul  6 16:05:00 2015
+
+	stop time is: Mon Jul  6 16:10:00 2015
+
+	nlen:	12
+	name:	京广高铁
+	---------------------
+
+	fe2b000100000002c900e723ed0d39b31848ac8ce413a05480e3cf41ce6adb2f34f91b1dee3954467797ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=2 task_state= 201 task_id:0xE723ED0D39B31848AC8CE413A05480E3
+	0 bytes data:0x
+	MD5:0xCF41CE6ADB2F34F91B1DEE3954467797
+	end: 0xFF
+	---------------------
+sec = 103 usec = 177109
+select timeout: sec = 103 usec = 177109
+client[3751]: client data changed after
+client[3751]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000003
+	task_type=2 task_state= 208 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x29D2E0F2BD2546D38A48BA3F8B3E3099
+	end: 0xFF
+	---------------------
+client[3751]: test task process
+0 e
+e7 e
+11
+client[3751]: start test task error: can't found task by this id
+Segmentation fault
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ gcc *.c -lpthread
+remote_client_event.c: In function ‘cancel_test_task’:
+remote_client_event.c:405: error: ‘len’ undeclared (first use in this function)
+remote_client_event.c:405: error: (Each undeclared identifier is reported only once
+remote_client_event.c:405: error: for each function it appears in.)
+remote_client_event.c:405: error: ‘sb’ undeclared (first use in this function)
+remote_client_event.c:406: warning: passing argument 4 of ‘fill_frame_buffer’ makes pointer from integer without a cast
+remote_client_event.c:32: note: expected ‘unsigned char *’ but argument is of type ‘unsigned char’
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ gcc *.c -lpthread
+remote_client_event.c: In function ‘cancel_test_task’:
+remote_client_event.c:406: error: ‘sb’ undeclared (first use in this function)
+remote_client_event.c:406: error: (Each undeclared identifier is reported only once
+remote_client_event.c:406: error: for each function it appears in.)
+remote_client_event.c:407: warning: passing argument 4 of ‘fill_frame_buffer’ makes pointer from integer without a cast
+remote_client_event.c:32: note: expected ‘unsigned char *’ but argument is of type ‘unsigned char’
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ gcc *.c -lpthread
+remote_client_event.c: In function ‘cancel_test_task’:
+remote_client_event.c:408: warning: passing argument 4 of ‘fill_frame_buffer’ makes pointer from integer without a cast
+remote_client_event.c:32: note: expected ‘unsigned char *’ but argument is of type ‘unsigned char’
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ gcc *.c -lpthread
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ ./a.out 
+client[3831]: attach framework core, connect to 61.237.239.183:55555
+client[3831]: attach remote server success, setup client event loop
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=1 task_state= 103 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x4CF2CED5F4A0BCD23996551B8A379F46
+	end: 0xFF
+	---------------------
+client[3831]: reg task process
+
+	fe47000000000001650000000000000000000000000000000000fffe43005200480033003800300042004a002d0030003300300031003866fcdb3792f36548600b52f4a06bcbff
+	---------------------
+	header:
+	head:0xFE len:71 token:0x00000000
+	task_type=1 task_state= 101 task_id:0x00000000000000000000000000000000
+	28 bytes data:0xFFFE43005200480033003800300042004A002D003000330030003100
+	MD5:0x3866FCDB3792F36548600B52F4A06BCB
+	end: 0xFF
+	---------------------
+select timeout: sec = 300 usec = 0
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000000
+	task_type=1 task_state= 102 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x69DBD10B70D5BEAB5332C261323B2582
+	end: 0xFF
+	---------------------
+client[3831]: reg task process
+client[3831]: reg task success
+select timeout: sec = 298 usec = 786903
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000002
+	task_type=2 task_state= 208 task_id:0xE723ED0D39B31848AC8CE413A05480E3
+	0 bytes data:0x
+	MD5:0x73B7C2642796D7AFADBE573ECA3BE1B8
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 e7
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00010000000235ffe723ed0d39b31848ac8ce413a05480e33521cdd69bd7e162c672b8288df19b0eff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=2 task_state=-203 task_id:0xE723ED0D39B31848AC8CE413A05480E3
+	0 bytes data:0x
+	MD5:0x3521CDD69BD7E162C672B8288DF19B0E
+	end: 0xFF
+	---------------------
+select timeout: sec = 270 usec = 4177
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000003
+	task_type=2 task_state= 208 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x29D2E0F2BD2546D38A48BA3F8B3E3099
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 e
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00020000000235ff0edd249b2566ff41844c378947a0d24af1039d53e86d6d22dead9ea793898ffdff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000002
+	task_type=2 task_state=-203 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0xF1039D53E86D6D22DEAD9EA793898FFD
+	end: 0xFF
+	---------------------
+select timeout: sec = 270 usec = 1836
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000004
+	task_type=2 task_state= 208 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0xEDD28A96058E7C988F1174E9A2DFA5A9
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 35
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00030000000235ff35940c4cab73144ab96c0580672c78b754991d961488513ac3053e13d00bd72fff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000003
+	task_type=2 task_state=-203 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x54991D961488513AC3053E13D00BD72F
+	end: 0xFF
+	---------------------
+select timeout: sec = 270 usec = 1832
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000005
+	task_type=2 task_state= 208 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x579A6CFBD961CD32265F835DCA4A6F3D
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 e
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00040000000235ff0edd249b2566ff41844c378947a0d24af8c7c8d0f5fe7d05f0ae9454d8492164ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000004
+	task_type=2 task_state=-203 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0xF8C7C8D0F5FE7D05F0AE9454D8492164
+	end: 0xFF
+	---------------------
+select timeout: sec = 240 usec = 8088
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000006
+	task_type=2 task_state= 208 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0xF02798E72C060524BC2B5B1E7A485187
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 35
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00050000000235ff35940c4cab73144ab96c0580672c78b738699eddcfb36d4f60cfd11aad80729aff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000005
+	task_type=2 task_state=-203 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x38699EDDCFB36D4F60CFD11AAD80729A
+	end: 0xFF
+	---------------------
+select timeout: sec = 240 usec = 5951
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000007
+	task_type=2 task_state= 208 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x9656C86B9E7E082298AF942AB2C24862
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 e
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00060000000235ff0edd249b2566ff41844c378947a0d24a38c502bd986a356f21f3bbc93000d8faff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000006
+	task_type=2 task_state=-203 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x38C502BD986A356F21F3BBC93000D8FA
+	end: 0xFF
+	---------------------
+select timeout: sec = 210 usec = 11604
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000008
+	task_type=2 task_state= 208 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x4356BE83B100FEC0E6B2DC556E8178B1
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 35
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00070000000235ff35940c4cab73144ab96c0580672c78b796b9b0cca5384687f6220327fbf37167ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000007
+	task_type=2 task_state=-203 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x96B9B0CCA5384687F6220327FBF37167
+	end: 0xFF
+	---------------------
+select timeout: sec = 210 usec = 9423
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000009
+	task_type=2 task_state= 208 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x4BCFBDD8590453755E7F1E94779A65BA
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 e
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00080000000235ff0edd249b2566ff41844c378947a0d24a2c6d4e94f4aa5cd3a1757aa273c1b16dff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000008
+	task_type=2 task_state=-203 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x2C6D4E94F4AA5CD3A1757AA273C1B16D
+	end: 0xFF
+	---------------------
+select timeout: sec = 180 usec = 15161
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000A
+	task_type=2 task_state= 208 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0xB825D7C953B8A5860B727D5B45F388A1
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 35
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b00090000000235ff35940c4cab73144ab96c0580672c78b729da4205ad812725dd850a13002a1e3eff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000009
+	task_type=2 task_state=-203 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x29DA4205AD812725DD850A13002A1E3E
+	end: 0xFF
+	---------------------
+select timeout: sec = 180 usec = 12847
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000B
+	task_type=2 task_state= 208 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x4B4ADBEB5CE32E2A2FC7073AB6469C95
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 e
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b000a0000000235ff0edd249b2566ff41844c378947a0d24ac16ce9ab57452635d3ed1d535aa7fa70ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000A
+	task_type=2 task_state=-203 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0xC16CE9AB57452635D3ED1D535AA7FA70
+	end: 0xFF
+	---------------------
+select timeout: sec = 150 usec = 18733
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000C
+	task_type=2 task_state= 208 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x3A8538BF0F92AA7FD4D115D2251D82A6
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 35
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b000b0000000235ff35940c4cab73144ab96c0580672c78b7271d55d8c2a8e5619d990c9db91f5a62ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000B
+	task_type=2 task_state=-203 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x271D55D8C2A8E5619D990C9DB91F5A62
+	end: 0xFF
+	---------------------
+select timeout: sec = 150 usec = 16644
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000D
+	task_type=2 task_state= 208 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0xA7D55FF5803FA714E5152E2DBD3F94F8
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 e
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b000c0000000235ff0edd249b2566ff41844c378947a0d24a76b9943768b38d4b469a7c17db99b548ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000C
+	task_type=2 task_state=-203 task_id:0x0EDD249B2566FF41844C378947A0D24A
+	0 bytes data:0x
+	MD5:0x76B9943768B38D4B469A7C17DB99B548
+	end: 0xFF
+	---------------------
+select timeout: sec = 120 usec = 22376
+client[3831]: client data changed after
+client[3831]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000E
+	task_type=2 task_state= 208 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0xD16D0D4F5F46ABC8562EE774CE5624CA
+	end: 0xFF
+	---------------------
+client[3831]: test task process
+0 35
+11
+client[3831]: start test task error: can't found task by this id
+
+	fe2b000d0000000235ff35940c4cab73144ab96c0580672c78b757c9f3ea6319239835c1eb8487354e7bff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x0000000D
+	task_type=2 task_state=-203 task_id:0x35940C4CAB73144AB96C0580672C78B7
+	0 bytes data:0x
+	MD5:0x57C9F3EA6319239835C1EB8487354E7B
+	end: 0xFF
+	---------------------
+select timeout: sec = 120 usec = 20112
+client[3831]: client data changed after
+^[[A^C
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ gcc *.c -lpthread
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ 
+

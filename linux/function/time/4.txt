@@ -1,0 +1,147 @@
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ ./a.out 
+client[3417]: attach framework core, connect to 61.237.239.183:55555
+client[3417]: attach remote server success, setup client event loop
+client[3417]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=1 task_state= 103 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x4CF2CED5F4A0BCD23996551B8A379F46
+	end: 0xFF
+	---------------------
+client[3417]: reg task process
+
+	fe47000000000001650000000000000000000000000000000000fffe43005200480033003800300042004a002d0030003300300031003866fcdb3792f36548600b52f4a06bcbff
+	---------------------
+	header:
+	head:0xFE len:71 token:0x00000000
+	task_type=1 task_state= 101 task_id:0x00000000000000000000000000000000
+	28 bytes data:0xFFFE43005200480033003800300042004A002D003000330030003100
+	MD5:0x3866FCDB3792F36548600B52F4A06BCB
+	end: 0xFF
+	---------------------
+select timeout: sec = 300 usec = 0
+client[3417]: client data changed after
+client[3417]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000000
+	task_type=1 task_state= 102 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x69DBD10B70D5BEAB5332C261323B2582
+	end: 0xFF
+	---------------------
+client[3417]: reg task process
+client[3417]: reg task success
+select timeout: sec = 298 usec = 353520
+client[3417]: client data changed after
+client[3417]: client data changed
+	---------------------
+	header:
+	head:0xFE len:170 token:0x00000002
+	task_type=2 task_state= 200 task_id:0x48C774DC3E316E4BA9B00A91B360603E
+	127 bytes data:0x2C00000000001027000000A21EC8CA85D288002EA50FCB85D28801000000000CE4BAACE5B9BFE9AB98E9938153000101000000000CE4BAACE5B9BFE9AB98E99381000001000200030004000500060007011101020B313334323630383337313514000000000000000A00000003080009000A000B000C000D000E000F001000
+	MD5:0x1542956EDDB8BF8B7E3D2D73A8891A5A
+	end: 0xFF
+	---------------------
+client[3417]: test task process
+	---------------------
+	len:	44
+	position:	init=0 start=0 stop=10000
+	time:	start=1436163540 stop=1436163660
+	start time is: Mon Jul  6 14:19:00 2015
+
+	stop time is: Mon Jul  6 14:21:00 2015
+
+	nlen:	12
+	name:	京广高铁
+	---------------------
+
+	fe2b000100000002c90048c774dc3e316e4ba9b00a91b360603e135ee578d6b38082704cafce65b36d31ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=2 task_state= 201 task_id:0x48C774DC3E316E4BA9B00A91B360603E
+	0 bytes data:0x
+	MD5:0x135EE578D6B38082704CAFCE65B36D31
+	end: 0xFF
+	---------------------
+sec = 106 usec = 661689
+select timeout: sec = 106 usec = 661689
+client[3417]: client data changed after
+client[3417]: select timeout: return = 0
+client[3417]: client data changed
+	-------start_task callback-------
+
+	fe2b000200000002cc0048c774dc3e316e4ba9b00a91b360603e21d9d1efac9dadffaf209faa93a6f545ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000002
+	task_type=2 task_state= 204 task_id:0x48C774DC3E316E4BA9B00A91B360603E
+	0 bytes data:0x
+	MD5:0x21D9D1EFAC9DADFFAF209FAA93A6F545
+	end: 0xFF
+	---------------------
+sec = 120 usec = 0
+select timeout: sec = 73 usec = 353520
+client[3417]: client data changed after
+client[3417]: select timeout: return = 0
+client[3417]: client data changed
+client[3417]: report status and position info
+
+	fe3c000300000005f4010000000000000000000000000000000000000000000000000000000000000000002e170a5e0fae99843e549eb3a3784aecff
+	---------------------
+	header:
+	head:0xFE len:60 token:0x00000003
+	task_type=5 task_state= 500 task_id:0x00000000000000000000000000000000
+	17 bytes data:0x0000000000000000000000000000000000
+	MD5:0x2E170A5E0FAE99843E549EB3A3784AEC
+	end: 0xFF
+	---------------------
+
+	fe2b000400000005900100000000000000000000000000000000ec6ab60b93f13ae30ebe50602b5f3230ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000004
+	task_type=5 task_state= 400 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0xEC6AB60B93F13AE30EBE50602B5F3230
+	end: 0xFF
+	---------------------
+sec = 46 usec = 646480
+select timeout: sec = 46 usec = 646480
+client[3417]: client data changed after
+client[3417]: select timeout: return = 0
+client[3417]: client data changed
+	-------stop task callback-------
+
+	fe2b000500000002cf0048c774dc3e316e4ba9b00a91b360603e49952bcde7e6a41dd828f4071b2135b3ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000005
+	task_type=2 task_state= 207 task_id:0x48C774DC3E316E4BA9B00A91B360603E
+	0 bytes data:0x
+	MD5:0x49952BCDE7E6A41DD828F4071B2135B3
+	end: 0xFF
+	---------------------
+
+	fe2b0006000000032c0100000000000000000000000000000000f54d088d369832b2dda09883426e2b83ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000006
+	task_type=3 task_state= 300 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0xF54D088D369832B2DDA09883426E2B83
+	end: 0xFF
+	---------------------
+select timeout: sec = 253 usec = 353520
+client[3417]: client data changed after
+
+
+
+
+
+^C
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ 
+

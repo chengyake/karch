@@ -1,0 +1,88 @@
+client[2649]: client data changed
+	---------------------
+	header:
+	head:0xFE len:183 token:0x00000002
+	task_type=2 task_state= 200 task_id:0xDB17C79BDD9CFC4283D7D089CBA48476
+	140 bytes data:0x2C0000000000E8030000003C75165283D2880082383A5283D28801000000000CE6988CE4B99DE59F8EE9998560000101000000000CE6988CE4B99DE59F8EE999850000010002000300040005000600070122000204313131311E0000000000000005000000020801200002033131311E00000037000000050000000209000A000B000C000D000E000F001000
+	MD5:0xA859F742B0949CDFEA0926DF6BCC86A1
+	end: 0xFF
+	---------------------
+client[2649]: test task process
+	---------------------
+	len:	44
+	position:	init=0 start=0 stop=1000
+	time:	start=38512058292401468 stop=110569652332673154
+	name:	
+	---------------------
+
+	fe2b000500000002c900db17c79bdd9cfc4283d7d089cba484761fa6d462b35142b49f717a17e1b9508bff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000005
+	task_type=2 task_state= 201 task_id:0xDB17C79BDD9CFC4283D7D089CBA48476
+	0 bytes data:0x
+	MD5:0x1FA6D462B35142B49F717A17E1B9508B
+	end: 0xFF
+	---------------------
+	-------start_task callback-------
+
+	fe2b000600000002cc000000000000000000000000000000000039e68bb7ae96aad3be55abafe7838571ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000006
+	task_type=2 task_state= 204 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x39E68BB7AE96AAD3BE55ABAFE7838571
+	end: 0xFF
+	---------------------
+sec = 12 usec = 0
+select timeout: sec = 12 usec = 0
+client[2649]: client data changed after
+client[2649]: select timeout: return = 0
+client[2649]: client data changed
+	-------stop task callback-------
+
+	fe2b000700000002cf0000000000000000000000000000000000fa956f7c8c7d9cc772e0aa30352f9408ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000007
+	task_type=2 task_state= 207 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0xFA956F7C8C7D9CC772E0AA30352F9408
+	end: 0xFF
+	---------------------
+
+	fe2b0008000000032c01000000000000000000000000000000002967e89980556a1ae333f1a6b4607244ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000008
+	task_type=3 task_state= 300 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x2967E89980556A1AE333F1A6B4607244
+	end: 0xFF
+	---------------------
+select timeout: sec = 228 usec = 159552
+client[2649]: client data changed after
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

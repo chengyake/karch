@@ -1,0 +1,95 @@
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ ls
+a.out     client_connection.c  client_task_queue.c  local_client_connection.c  local_client_event.c  md5.h                       remote_client_connection.h
+client.c  client_connection.h  client_task_queue.h  local_client_connection.h  md5.c                 remote_client_connection.c  remote_client_event.c
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ ./a.out 
+client[3859]: attach framework core, connect to 61.237.239.183:55555
+client[3859]: attach remote server success, setup client event loop
+client[3859]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=1 task_state= 103 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x4CF2CED5F4A0BCD23996551B8A379F46
+	end: 0xFF
+	---------------------
+client[3859]: reg task process
+
+	fe47000000000001650000000000000000000000000000000000fffe43005200480033003800300042004a002d0030003300300031003866fcdb3792f36548600b52f4a06bcbff
+	---------------------
+	header:
+	head:0xFE len:71 token:0x00000000
+	task_type=1 task_state= 101 task_id:0x00000000000000000000000000000000
+	28 bytes data:0xFFFE43005200480033003800300042004A002D003000330030003100
+	MD5:0x3866FCDB3792F36548600B52F4A06BCB
+	end: 0xFF
+	---------------------
+select timeout: sec = 300 usec = 0
+client[3859]: client data changed after
+client[3859]: client data changed
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000000
+	task_type=1 task_state= 102 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0x69DBD10B70D5BEAB5332C261323B2582
+	end: 0xFF
+	---------------------
+client[3859]: reg task process
+client[3859]: reg task success
+select timeout: sec = 299 usec = 990499
+client[3859]: client data changed after
+
+
+
+
+
+client[3859]: client data changed
+	---------------------
+	header:
+	head:0xFE len:161 token:0x00000002
+	task_type=2 task_state= 200 task_id:0x592B4FC90F2FFA4A8B90C948B52161C7
+	118 bytes data:0x2C0000000000ED030000001C7B435D83D28800623E675D83D28801000000000CE6988CE4B99DE59F8EE999854A000101000000000CE6988CE4B99DE59F8EE999850000010002000300040005000600070111000202313114000000000000000A00000003080009000A000B000C000D000E000F001000
+	MD5:0x454BEC909951C289B0C6AB7C3BDDEAC1
+	end: 0xFF
+	---------------------
+client[3859]: test task process
+	---------------------
+	len:	44
+	position:	init=1 start=0 stop=1005
+	time:	start=9859086970854775808 stop=9859086971454775808
+	start time is: (null)
+	stop time is: (null)
+	nlen:	0
+	name:	
+	---------------------
+
+	fe2b000100000002c900592b4fc90f2ffa4a8b90c948b52161c776d81be0988341574bc333f261f1f937ff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000001
+	task_type=2 task_state= 201 task_id:0x592B4FC90F2FFA4A8B90C948B52161C7
+	0 bytes data:0x
+	MD5:0x76D81BE0988341574BC333F261F1F937
+	end: 0xFF
+	---------------------
+	-------start_task callback-------
+
+	fe2b000200000002cc0000000000000000000000000000000000c58754f51704d596dd835bec76bfdf7fff
+	---------------------
+	header:
+	head:0xFE len:43 token:0x00000002
+	task_type=2 task_state= 204 task_id:0x00000000000000000000000000000000
+	0 bytes data:0x
+	MD5:0xC58754F51704D596DD835BEC76BFDF7F
+	end: 0xFF
+	---------------------
+sec = -8587657103690672367 usec = 0
+select timeout: sec = -8587657103690672367 usec = 0
+client[3859]: client data changed after
+client[3859]: select error: return = -1
+client[3859]: setup event loop -1
+client[3859]: de-attach framework core
+client[3859]: de-attach framework core
+lonshine@lonshine-laptop:~/study/trains/trainlog_system/client$ 
+
