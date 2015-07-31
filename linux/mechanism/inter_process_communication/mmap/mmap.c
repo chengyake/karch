@@ -23,46 +23,40 @@ int main( void )
 
     //创建文件并写入测试数据
 
-    fp = fopen ("records.dat", "w+") ;
-    for ( i = 0; i < SIZE; i+ + )
-    {
-        record. index = i;
-        sprintf ( record. text, "No.%d" , i) ;
-        fwrite ( & record, sizeof ( record) , 1, fp) ; //因为字节序对齐，在32位机上，sizeof(record)＝16，并不是14。
-
+    fp = fopen("records.dat", "w+") ;
+    for ( i = 0; i < SIZE; i+ + ) {
+        record.index = i;
+        sprintf(record.text, "No.%d", i) ;
+        fwrite(&record, sizeof(record) , 1, fp) ; //因为字节序对齐，在32位机上，sizeof(record)＝16，并不是14。
     }
-    fclose (fp) ;
-    printf ( "Ok, write %d records to the file: records.dat ./n" , SIZE) ;
+    fclose(fp) ;
+    printf("Ok, write %d records to the file: records.dat .\n" , SIZE) ;
 
     //将第一30条记录编号修改为300，并相应地修改其内容。
-
     //采用传统方式
 
-    fp = fopen ( "records.dat" , "r+" ) ;
-    fseek ( fp, EDIT_INDEX * sizeof ( record) , SEEK_SET ) ;
-    fread ( & record, sizeof ( record) , 1, fp) ;
+    fp = fopen("records.dat" ,"r+") ;
+    fseek(fp, EDIT_INDEX*sizeof(record), SEEK_SET) ;
+    fread(&record, sizeof (record) , 1, fp) ;
 
-    record. index = EDIT_INDEX* 10;
-    sprintf ( record. text, "No.%d" , record. index) ;
+    record.index = EDIT_INDEX*10;
+    sprintf(record.text, "No.%d" , record.index) ;
 
-    fseek ( fp, EDIT_INDEX * sizeof ( record) , SEEK_SET ) ;
-    fwrite ( & record, sizeof ( record) , 1, fp) ;
-    fclose ( fp) ;
-    printf ( "Ok, edit the file of records.dat using traditional method./n" ) ;
+    fseek(fp, EDIT_INDEX*sizeof(record) , SEEK_SET) ;
+    fwrite(&record, sizeof(record) , 1, fp) ;
+    fclose(fp) ;
+    printf("Ok, edit the file of records.dat using traditional method./n" ) ;
 
     /////////////////////////////////////////
 
-    //同样的修改，这次使用内存映射方式。
 
-    //将记录映射到内存中
-
-    fd = open ( "records.dat" , O_RDWR) ;
-    p_mapped_memory_addr = ( RECORD * ) mmap( 0, SIZE * sizeof ( record) , PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0) ;
+    fd = open("records.dat" , O_RDWR);
+    p_mapped_memory_addr = (RECORD *) mmap(0, SIZE*sizeof(record) , PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     //修改数据
 
-    p_mapped_memory_addr[ EDIT_INDEX] . index = EDIT_INDEX* 10;
-    sprintf ( p_mapped_memory_addr[ EDIT_INDEX] . text, "No.%d" ,
-            p_mapped_memory_addr[ EDIT_INDEX] . index) ;
+    p_mapped_memory_addr[EDIT_INDEX].index = EDIT_INDEX*10;
+    sprintf(p_mapped_memory_addr[EDIT_INDEX].text, "No.%d" ,
+            p_mapped_memory_addr[EDIT_INDEX].index);
 
     /* Synchronize the region starting at ADDR and extending LEN bytes with the
        file it maps. Filesystem operations on a file being mapped are
@@ -72,18 +66,16 @@ int main( void )
        __THROW. extern int msync (void *__addr, size_t __len, int __flags);
      */
     //将修改写回映射文件中(采用异步写方式)
+    msync((void *)p_mapped_memory_addr, SIZE*sizeof(record) ,MS_ASYNC);
 
-    msync( ( void * ) p_mapped_memory_addr, SIZE * sizeof ( record) , MS_ASYNC) ;
     /* Deallocate any mapping for the region starting at ADDR and extending LEN
        bytes. Returns 0 if successful, -1 for errors (and sets errno).
        extern int munmap (void *__addr, size_t __len) __THROW;
      */
     //释放内存段
-
     munmap( ( void * ) p_mapped_memory_addr, SIZE * sizeof ( record) ) ;
     printf ( "Ok, edit the file of records.dat using mmap method./n" ) ;
 
-    //关闭文件
 
     close ( fd) ;
 
