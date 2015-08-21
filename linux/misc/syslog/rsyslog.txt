@@ -1,0 +1,85 @@
+	首先，ubuntu的配置文件为/etc/rsyslog.conf，不再是/etc/syslog.conf； rsyslog 是一个 syslogd 的多线程增强版。现在Fedora和Ubuntu, rhel6默认的日志系统都是rsyslog了。rsyslog负责写入日志, logrotate负责备份和删除旧日志, 以及更新日志文件
+
+	apt-get install rsyslog   安装rsyslog
+
+	查看当前rsyslog服务的状态:/etc/init.d/rsyslog status
+
+	重新启动一下syslog服务，sudo /etc/init.d/rsyslog restart
+
+
+	有点搞不懂ubuntu中配置文件位置/etc/rsyslog.d/50-default.conf和/etc/rsyslog.conf。 原因：在/etc/rsyslog.conf中有一行： 
+	$IncludeConfig /etc/rsyslog.d/*.conf    ;
+	把/etc/rsyslog.d/目录下的配置文件都包含进来，即利用include把分散到几个的配置信息集中到一个主配置文件当中，就像已经在/etc/rsyslog.conf中一样；
+	而默认的日志规则（Default rules for rsyslog）放在50-default.conf文件中，故可在50-default.conf中直接修改。
+
+举例：	
+1、修改rsyslog文件，
+
+   将/etc/rsyslog.d/50-default.conf  中#cron.*前的#删掉  
+
+2、重启rsyslog服务
+
+   sudo service rsyslog restart   // sudo service rsyslog status  查看当前rsyslog服务的状态
+
+3、重启cron服务
+
+   sudo service cron restart    
+
+	规则：
+	facility.level    action
+ 
+	  action   字段可以是文件名、tty（如   /dev/console）、以  @ 为前缀的远程机器、以逗号分隔的用户列表，或是   *   以表明向所有登录用户发送消息。最常见的操作是一个简单的文件名。 
+
+	  level   等于操作符(=)表示仅对这个级别的消息进行操作,不等操作符(!)表示忽略这个级别以及更严重级别的消息.这两个操作符可以同时使用,不过"!"必须出现在"="的前面.
+
+         举例： 
+        local2.info        -/var/log/chengxiaoke/log/local2_info.log                   //其中 action前的 “-” 表示 满足一定数量后再输出
+	    local3.info        -/var/log/chengxiaoke/log/local3_info.log
+		user.err           -/var/log/chengxiaoke/log/err.log
+        *.info;mail.none;authpriv.none;cron.none            
+        /var/log/messages
+        记录所有日志类型的info级别以及大于info级别的信息到/var/log/messages，但是mail邮件信息，authpriv验证方面的信息和cron时间任务相关的信息除外
+
+
+	日志文件的轮替logrotate   http://blog.csdn.net/cjwid/article/details/1690101  内容不多，但讲的很详细，很有用。
+
+	在常年运行的服务器上面，通常会有logrotate程序定期进行日志文件的轮替和删除工作。logrotate 的主配置文件是 /etc/logrotate.conf。include 选项读取的日志配置文件在/etc/logrotate.d/syslog中。
+
+	#此为缺省的配置，其一般放在logrotate.conf 文件的最开始处，影响整个系统。
+        # 可以设定的循环参数有每周(weekly)或每天(daily)
+	# 每周循环更新日志文件
+	weekly
+	# 保留4份日志文件的备份，若日志文件为logfile，则其备份
+	# 分别为logfile.0~logfile3
+	#rotate 参数定义保留多少份日志文件备份
+	rotate 4
+	# 在每轮循环后创建新的空白日志文件
+	#create参数指定在每轮循环后就新建空的日志文件
+	create
+	# 如果你想压缩日志文件，则取消下面注释
+	#compress
+	# 一些使用syslog的软件包会把日志轮转信息放在这个目录下，因此要包含进来，则取消注释
+	#include /etc/logrotate.d
+	# 没有软件包拥有wtmp或btmp，我们将在这里轮转
+	/var/log/wtmp {
+                missingok       # 如果日志文件丢失，使用下一个并且不发送任何错误消息
+                monthly         # 轮转周期为每月
+                create 0664 root utmp  # 创建新日志文件时，权限为0664，属主为root，组为utmp
+                rotate 1
+             }
+        /var/log/btmp {
+                missingok
+                monthly
+                create 0664 root utmp
+                rotate 1
+	}
+	# 特定于系统的日志可以在这里配置
+	
+
+
+
+
+    硬链接不能对目录进行创建，只可对文件创建       命令：ln  /var/log/chengxiaoke/log/err.log  /home/chengxiaoke/log/hard_link/err.log_link
+
+    软链接，也称为符号链接，只能放到存在的目录里    命令：ln -s /var/log/chengxiaoke/log/user.log    /home/chengxiaoke/user/user.log_link
+
