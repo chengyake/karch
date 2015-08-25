@@ -1,0 +1,117 @@
+diff --git a/Android.mk b/Android.mk
+index 5a94e00..180a850 100755
+--- a/Android.mk
++++ b/Android.mk
+@@ -163,6 +163,7 @@ LOCAL_SRC_FILES += \
+ 	core/java/android/os/IUpdateLock.aidl \
+ 	core/java/android/os/IUserManager.aidl \
+ 	core/java/android/os/IVibratorService.aidl \
++	core/java/android/os/IVdevService.aidl \
+ 	core/java/android/service/notification/INotificationListener.aidl \
+ 	core/java/android/print/ILayoutResultCallback.aidl \
+ 	core/java/android/print/IPrinterDiscoveryObserver.aidl \
+diff --git a/api/current.txt b/api/current.txt
+index 9f2c83f..075dd36 100644
+--- a/api/current.txt
++++ b/api/current.txt
+@@ -17896,6 +17896,23 @@ package android.os {
+     method public abstract android.os.IBinder asBinder();
+   }
+ 
++  public abstract interface IVdevService implements android.os.IInterface {
++    method public abstract int freePin(int) throws android.os.RemoteException;
++    method public abstract int getPinConfig(int) throws android.os.RemoteException;
++    method public abstract int getPinLevel(int) throws android.os.RemoteException;
++    method public abstract byte[] readI2c(int, int) throws android.os.RemoteException;
++    method public abstract int requestPin(int, int, int) throws android.os.RemoteException;
++    method public abstract int setPinLevel(int, int) throws android.os.RemoteException;
++    method public abstract int writeI2c(int, byte[], int) throws android.os.RemoteException;
++  }
++
++  public static abstract class IVdevService.Stub extends android.os.Binder implements android.os.IVdevService {
++    ctor public IVdevService.Stub();
++    method public android.os.IBinder asBinder();
++    method public static android.os.IVdevService asInterface(android.os.IBinder);
++    method public boolean onTransact(int, android.os.Parcel, android.os.Parcel, int) throws android.os.RemoteException;
++  }
++
+   public final class Looper {
+     method public void dump(android.util.Printer, java.lang.String);
+     method public static android.os.Looper getMainLooper();
+@@ -18420,6 +18437,61 @@ package android.os {
+     field public static final java.lang.String DISALLOW_USB_FILE_TRANSFER = "no_usb_file_transfer";
+   }
+ 
++  public class VdevParam {
++    ctor public VdevParam();
++    field public static final java.lang.String ACTION_FREE_PIN_RSP = "action.com.android.server.FREE_PIN_RSP";
++    field public static final java.lang.String ACTION_GET_PIN_CONFIG_RSP = "action.com.android.server.GET_PIN_CONFIG_RSP";
++    field public static final java.lang.String ACTION_GET_PIN_LEVEL_RSP = "action.com.android.server.GET_PIN_VALUE_RSP";
++    field public static final java.lang.String ACTION_IRQ_TRIGGER = "action.com.android.server.IRQ_TRIGGER";
++    field public static final java.lang.String ACTION_READ_I2C_RSP = "action.com.android.server.READ_I2C_RSP";
++    field public static final java.lang.String ACTION_REQUEST_PIN_RSP = "action.com.android.server.REQUEST_PIN_RSP";
++    field public static final java.lang.String ACTION_SET_PIN_LEVEL_RSP = "action.com.android.server.REQUEST_PIN_RSP";
++    field public static final java.lang.String ACTION_WRITE_I2C_RSP = "action.com.android.server.WRITE_I2C_RSP";
++    field public static final int CMD_FREE_PIN = 5; // 0x5
++    field public static final int CMD_GET_PIN_CONFIG = 1; // 0x1
++    field public static final int CMD_GET_PIN_LEVEL = 3; // 0x3
++    field public static final int CMD_IRQ_TRIGGER = 4; // 0x4
++    field public static final int CMD_READ_I2C = 6; // 0x6
++    field public static final int CMD_REQUEST_PIN = 0; // 0x0
++    field public static final int CMD_SET_PIN_LEVEL = 2; // 0x2
++    field public static final int CMD_WRITE_I2C = 7; // 0x7
++    field public static final java.lang.String EXTRA_FREE_PIN_NUM = "action.com.android.server.EXTRA_FREE_PIN_NUM";
++    field public static final java.lang.String EXTRA_FREE_PIN_RET = "action.com.android.server.EXTRA_FREE_PIN_RET";
++    field public static final java.lang.String EXTRA_GET_PIN_CONFIG_NUM = "action.com.android.server.EXTRA_GET_PIN_CONFIG_NUM";
++    field public static final java.lang.String EXTRA_GET_PIN_CONFIG_RET = "action.com.android.server.EXTRA_GET_PIN_CONFIG_RET";
++    field public static final java.lang.String EXTRA_GET_PIN_LEVEL_NUM = "action.com.android.server.EXTRA_GET_PIN_VALUE_NUM";
++    field public static final java.lang.String EXTRA_GET_PIN_LEVEL_RET = "action.com.android.server.EXTRA_GET_PIN_VALUE_RET";
++    field public static final java.lang.String EXTRA_IRQ_TRIGGER_NUM = "action.com.android.server.EXTRA_IRQ_TRIGGER_NUM";
++    field public static final java.lang.String EXTRA_IRQ_TRIGGER_RET = "action.com.android.server.EXTRA_IRQ_TRIGGER_RET";
++    field public static final java.lang.String EXTRA_READ_I2C_NUM = "action.com.android.server.EXTRA_READ_I2C_NUM";
++    field public static final java.lang.String EXTRA_READ_I2C_RET = "action.com.android.server.EXTRA_READ_I2C_RET";
++    field public static final java.lang.String EXTRA_REQUEST_PIN_NUM = "action.com.android.server.EXTRA_REQUEST_PIN_NUM";
++    field public static final java.lang.String EXTRA_REQUEST_PIN_RET = "action.com.android.server.EXTRA_REQUEST_PIN_RET";
++    field public static final java.lang.String EXTRA_SET_PIN_LEVEL_NUM = "action.com.android.server.EXTRA_REQUEST_PIN_NUM";
++    field public static final java.lang.String EXTRA_SET_PIN_LEVEL_RET = "action.com.android.server.EXTRA_REQUEST_PIN_RET";
++    field public static final java.lang.String EXTRA_WRITE_I2C_NUM = "action.com.android.server.EXTRA_WRITE_I2C_NUM";
++    field public static final java.lang.String EXTRA_WRITE_I2C_RET = "action.com.android.server.EXTRA_WRITE_I2C_RET";
++    field public static final int PIN_0 = 0; // 0x0
++    field public static final int PIN_1 = 1; // 0x1
++    field public static final int PIN_2 = 2; // 0x2
++    field public static final int PIN_3 = 3; // 0x3
++    field public static final int PIN_4 = 4; // 0x4
++    field public static final int PIN_5 = 5; // 0x5
++    field public static final int PIN_6 = 6; // 0x6
++    field public static final int PIN_7 = 7; // 0x7
++    field public static final int PIN_8 = 8; // 0x8
++    field public static final int PIN_9 = 9; // 0x9
++    field public static final int PIN_OUTPUT_HIGH = 1; // 0x1
++    field public static final int PIN_OUTPUT_LOW = 0; // 0x0
++    field public static final int PIN_TRIGER_EAGE_BOTH = 2; // 0x2
++    field public static final int PIN_TRIGER_EAGE_FALLING = 1; // 0x1
++    field public static final int PIN_TRIGER_EAGE_RISING = 0; // 0x0
++    field public static final int PIN_TYPE_IN = 1; // 0x1
++    field public static final int PIN_TYPE_IRQ = 3; // 0x3
++    field public static final int PIN_TYPE_NULL = 0; // 0x0
++    field public static final int PIN_TYPE_OUT = 2; // 0x2
++  }
++
+   public abstract class Vibrator {
+     method public abstract void cancel();
+     method public abstract boolean hasVibrator();
+diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
+index 31e237f..aea0133 100644
+--- a/services/java/com/android/server/SystemServer.java
++++ b/services/java/com/android/server/SystemServer.java
+@@ -315,6 +315,10 @@ class ServerThread {
+             alarm = new AlarmManagerService(context);
+             ServiceManager.addService(Context.ALARM_SERVICE, alarm);
+ 
++            Slog.i(TAG, "Virtural device interface service");
++            VdevService vs = new VdevService(context);
++            ServiceManager.addService("VdevService", vs);
++
+             Slog.i(TAG, "Init Watchdog");
+             Watchdog.getInstance().init(context, battery, power, alarm,
+                     ActivityManagerService.self());
