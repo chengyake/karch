@@ -1,0 +1,15 @@
+diff --git a/services/java/com/android/server/SystemServer.java b/services/java/com/android/server/SystemServer.java
+index 31e237f..e1a955e 100644
+--- a/services/java/com/android/server/SystemServer.java
++++ b/services/java/com/android/server/SystemServer.java
+@@ -315,6 +315,10 @@ class ServerThread {
+             alarm = new AlarmManagerService(context);
+             ServiceManager.addService(Context.ALARM_SERVICE, alarm);
+ 
++            Slog.i(TAG, "add server wake system");
++            VdevService vs = new VdevService(context);
++            //ServiceManager.addService("VdevService", vs);
++
+             Slog.i(TAG, "Init Watchdog");
+             Watchdog.getInstance().init(context, battery, power, alarm,
+                     ActivityManagerService.self());
