@@ -12,6 +12,8 @@ ssh -N -f -R 2222:127.0.0.1:22 username@123.123.123.123
 在外网的IP上登陆
 ssh -p 2222 username@localhost
 
+后台保持连接:
+ssh -f -R 2222:localhost:22 123.123.123.123 "vmstat 30"
 
 2.
 
