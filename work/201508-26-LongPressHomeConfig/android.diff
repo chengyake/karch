@@ -1,0 +1,118 @@
+diff --git a/core/res/res/values/config.xml b/core/res/res/values/config.xml
+index a1376c3..7df8a0c 100644
+--- a/core/res/res/values/config.xml
++++ b/core/res/res/values/config.xml
+@@ -622,10 +622,12 @@
+             0 - Nothing
+             1 - Recent apps view in SystemUI
+             2 - Launch assist intent
++            3 - Notify Application by intent
++         define item 3 specialy for apps by lonshine yake.cheng
+          This needs to match the constants in
+          policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
+     -->
+-    <integer name="config_longPressOnHomeBehavior">1</integer>
++    <integer name="config_longPressOnHomeBehavior">3</integer>
+ 
+     <!-- Control the behavior when the user double-taps the home button.
+             0 - Nothing
+diff --git a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
+index 519fe65..77e46ae 100755
+--- a/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
++++ b/policy/src/com/android/internal/policy/impl/PhoneWindowManager.java
+@@ -147,6 +147,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     static final int LONG_PRESS_HOME_NOTHING = 0;
+     static final int LONG_PRESS_HOME_RECENT_SYSTEM_UI = 1;
+     static final int LONG_PRESS_HOME_ASSIST = 2;
++    static final int LONG_PRESS_HOME_NOTIFY = 3;
+ 
+     static final int DOUBLE_TAP_HOME_NOTHING = 0;
+     static final int DOUBLE_TAP_HOME_RECENT_SYSTEM_UI = 1;
+@@ -161,6 +162,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     static public final String SYSTEM_DIALOG_REASON_RECENT_APPS = "recentapps";
+     static public final String SYSTEM_DIALOG_REASON_HOME_KEY = "homekey";
+     static public final String SYSTEM_DIALOG_REASON_ASSIST = "assist";
++    static public final String SYSTEM_DIALOG_REASON_NOTIFY = "notify";
++
++    static public final String LHOMEP = "com.android.internal.policy.impl.LongHomePressed";
++    static public final String LHOMER = "com.android.internal.policy.impl.LongHomeReleased";
+ 
+     /**
+      * These are the system UI flags that, when changing, can cause the layout
+@@ -786,7 +791,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 toggleRecentApps();
+             } else if (mLongPressOnHomeBehavior == LONG_PRESS_HOME_ASSIST) {
+                 launchAssistAction();
++            } else if (mLongPressOnHomeBehavior == LONG_PRESS_HOME_NOTIFY) {
++                notifyAppsLongHomePress();
+             }
++
+         }
+     }
+ 
+@@ -1001,7 +1009,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         mLongPressOnHomeBehavior = mContext.getResources().getInteger(
+                 com.android.internal.R.integer.config_longPressOnHomeBehavior);
+         if (mLongPressOnHomeBehavior < LONG_PRESS_HOME_NOTHING ||
+-                mLongPressOnHomeBehavior > LONG_PRESS_HOME_ASSIST) {
++                mLongPressOnHomeBehavior > LONG_PRESS_HOME_NOTIFY) {
+             mLongPressOnHomeBehavior = LONG_PRESS_HOME_NOTHING;
+         }
+ 
+@@ -2014,6 +2022,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 mHomePressed = false;
+                 if (mHomeConsumed) {
+                     mHomeConsumed = false;
++                    notifyAppsLongHomeRelease();
+                     return -1;
+                 }
+ 
+@@ -2428,6 +2437,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         }
+     }
+ 
++    private void notifyAppsLongHomePress() {
++        sendCloseSystemWindows(SYSTEM_DIALOG_REASON_NOTIFY);
++        Intent intent=new Intent();
++        intent.setAction(LHOMEP);
++        mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
++    }
++
++    private void notifyAppsLongHomeRelease() {
++        Intent intent=new Intent();
++        intent.setAction(LHOMER);
++        mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
++    }
++
+     private SearchManager getSearchManager() {
+         if (mSearchManager == null) {
+             mSearchManager = (SearchManager) mContext.getSystemService(Context.SEARCH_SERVICE);
+@@ -4539,12 +4561,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                         || orientation == ActivityInfo.SCREEN_ORIENTATION_FULL_USER) {
+                     preferredRotation = sensorRotation;
+                 } else {
+-                    // check ro.sf.lockrotation property
+-                    if (SystemProperties.getBoolean("ro.sf.180rotation", false) == true ) {
+-					    preferredRotation = sensorRotation;
+-                    } else {
+-                        preferredRotation = lastRotation;
+-                    }
++                    preferredRotation = lastRotation;
+                 }
+             } else if (mUserRotationMode == WindowManagerPolicy.USER_ROTATION_LOCKED
+                     && orientation != ActivityInfo.SCREEN_ORIENTATION_NOSENSOR) {
+@@ -4556,13 +4573,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+             } else {
+                 // No overriding preference.
+                 // We will do exactly what the application asked us to do.
+-
+-                // check ro.sf.lockrotation property
+-                if (SystemProperties.getBoolean("ro.sf.lockrotation", false) == true ) {
+-				    preferredRotation = sensorRotation;
+-                } else {
+-                    preferredRotation = -1;
+-                }
++                preferredRotation = -1;
+             }
+ 
+             switch (orientation) {

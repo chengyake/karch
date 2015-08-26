@@ -1,0 +1,102 @@
+diff --git a/arch/x86/boot/dts/SF_3G-mrd5s.dts b/arch/x86/boot/dts/SF_3G-mrd5s.dts
+index ce921bc..556a72a 100644
+--- a/arch/x86/boot/dts/SF_3G-mrd5s.dts
++++ b/arch/x86/boot/dts/SF_3G-mrd5s.dts
+@@ -564,6 +564,44 @@
+ 
+ };
+ 
++&keypad {
++	pinctrl-names = "default", "sleep", "inactive";
++	pinctrl-0 = <&kp_default_pins>;
++	pinctrl-1 = <&kp_sleep_pins>;
++	pinctrl-2 = <&kp_inactive_pins>;
++	keypad,num-rows = <5>;
++	keypad,num-columns = <8>;
++#ifdef SOFIA3G_MRD5S
++	keypad,rows = <4>;
++	keypad,columns = <1>;
++	linux,keymap = <0x04010066>;	/* KEY_HOME */
++
++#else
++	keypad,rows = <0 2>;
++	keypad,columns = <0 1 2>;
++	linux,keymap = <0x00000073	/* KEY_VOLUMEUP */
++			0x00010066	/* KEY_HOME */
++			0x00020000	/* KEY_RESERVED */
++			0x00030000	/* KEY_RESERVED */
++			0x00040000	/* KEY_RESERVED */
++			0x00050000	/* KEY_RESERVED */
++			0x00060000	/* KEY_RESERVED */
++			0x00070000	/* KEY_RESERVED */
++			0x01000000	/* KEY_RESERVED */
++			0x01010000	/* KEY_RESERVED */
++			0x01020000	/* KEY_RESERVED */
++			0x01030000	/* KEY_RESERVED */
++			0x01040000	/* KEY_RESERVED */
++			0x01050000	/* KEY_RESERVED */
++			0x01060000	/* KEY_RESERVED */
++			0x01070000	/* KEY_RESERVED */
++			0x02000072	/* KEY_VOLUMEDOWN */
++			0x02010000	/* KEY_RESERVED */
++			0x02020000>;	/* KEY_RESERVED */
++#endif
++};
++
++
+ #ifndef RECOVERY_KERNEL
+ &cif {
+ 	//intel,camera-modules-attached = <&camera0 &camera1>;
+diff --git a/arch/x86/boot/dts/xgold/sofia_3g_soc/pinctrl-sf_3g-es2.1-svb.dtsi b/arch/x86/boot/dts/xgold/sofia_3g_soc/pinctrl-sf_3g-es2.1-svb.dtsi
+index 71984f8..2015ed9 100644
+--- a/arch/x86/boot/dts/xgold/sofia_3g_soc/pinctrl-sf_3g-es2.1-svb.dtsi
++++ b/arch/x86/boot/dts/xgold/sofia_3g_soc/pinctrl-sf_3g-es2.1-svb.dtsi
+@@ -86,6 +86,7 @@
+ 			0x20c 0x10010	/* kp_out0 */
+ #endif
+ 			0x214 0x10010	/* kp_out2 */
++			0x22C 0x10010	/* kp_out4 */
+ 		>;
+ 	};
+ 	kp_inactive_pins:kp_inactive_pins {
+@@ -97,6 +98,7 @@
+ 			0x20c 0x10010	/* kp_out0 */
+ #endif
+ 			0x214 0x10010	/* kp_out2 */
++			0x22C 0x10010	/* kp_out4 */
+ 		>;
+ 	};
+ kp_sleep_pins:kp_sleep_pins {
+@@ -108,6 +110,7 @@ kp_sleep_pins:kp_sleep_pins {
+ 			0x20c 0x10010	/* kp_out0 */
+ #endif
+ 			0x214 0x10010	/* kp_out2 */
++			0x22C 0x10010	/* kp_out4 */
+ 		>;
+ 	};
+ 
+diff --git a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+index 4edd84f..1813c10 100644
+--- a/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
++++ b/arch/x86/boot/dts/xgold/sofia_3g_soc/sofia_3g_soc.dtsi
+@@ -920,7 +920,7 @@
+ 
+ 					#if defined (SOFIA3G_MRD7S) || defined (SOFIA3G_MRD5S)
+ 					/* don't need config keypad device on MRD7S/5S */
+-					#else
++					//#else
+ 					keypad:keypad {
+ 						compatible = "intel,keypad";
+ 						#address-cells = < 0 >;
+diff --git a/drivers/input/keyboard/Makefile b/drivers/input/keyboard/Makefile
+index f63da0d..6d3b69b 100644
+--- a/drivers/input/keyboard/Makefile
++++ b/drivers/input/keyboard/Makefile
+@@ -55,6 +55,7 @@ obj-$(CONFIG_KEYBOARD_TC3589X)		+= tc3589x-keypad.o
+ obj-$(CONFIG_KEYBOARD_TEGRA)		+= tegra-kbc.o
+ obj-$(CONFIG_KEYBOARD_TNETV107X)	+= tnetv107x-keypad.o
+ obj-$(CONFIG_KEYBOARD_TWL4030)		+= twl4030_keypad.o
++obj-$(CONFIG_KEYBOARD_XGOLD)		+= xgold-keypad.o
+ obj-$(CONFIG_KEYBOARD_XTKBD)		+= xtkbd.o
+ obj-$(CONFIG_KEYBOARD_W90P910)		+= w90p910_keypad.o
+ obj-$(CONFIG_KEYBOARD_XGOLD)		+= xgold-on-button.o
