@@ -1,0 +1,3 @@
+1. uninstall all catalyst*  flgrx*
+2. install catalyst driver by amd-driver-installer-15.20.1046-x86.x86_64.run
+3. install AMD APP SDK
