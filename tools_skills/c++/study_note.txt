@@ -1,0 +1,86 @@
+--------------------------------
+所有我们要使用的变量都必须事先声明过。Ｃ和Ｃ++语言的一个重要区别是，在C++语言中我们可以在源程序中任何地方声明变量，甚至可以在两个可执行(excutable)语句的中间声明变量，而不象在C语言中变量声明只能在程序的开头部分。
+
+
+
+
+
+--------------------------------
+C++拥有而其他语言没有的一个特性是赋值符 (=) 可以被用作另一个赋值符的rvalue (或rvalue的一部分) 。例如：
+a = 2 + (b = 5);
+等同于：
+b = 5;
+a = 2 + b; 
+
+
+
+--------------------------------
+cin 给输入使用和cout给输出使用。另外，cerr和clog也已经被实现
+
+
+
+
+--------------------------------
+和类型在一起的是引用，和变量在一起的是取址
+int a=3；
+int &b=a；        //引用
+int *p=&a;        //取地址
+
+
+
+
+
+--------------------------------
+当声明一个函数的时候我们可以给每一个参数指定一个默认值
+int divide (int a, int b=2) {
+...
+
+
+
+--------------------------------
+atoi: 将字符串string 转换为整型int
+atol: 将字符串string 转换为长整型long
+atof: 将字符串string 转换为浮点型float 
+
+
+
+
+--------------------------------
+操作符new 和new[], delete delete[]
+int * bobby = new int [5];
+delete[] bobby;
+
+
+
+
+
+--------------------------------
+在 C++ 我们可以选择使联合(union)匿名
+union 
+struct {
+    char title[50];
+    char author[50];
+    union {
+        float dollars;
+        int yens;
+    } price;
+} book; 	
+
+anonymous union
+struct {
+    char title[50];
+    char author[50];
+    union {
+        float dollars;
+        int yens;
+    };
+} book;
+
+book.price.dollars
+book.price.yens
+
+而在后面一种定义下，我们直接使用：
+
+book.dollars
+book.yens
+
