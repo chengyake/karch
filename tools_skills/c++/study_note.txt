@@ -84,3 +84,86 @@ book.price.yens
 book.dollars
 book.yens
 
+
+
+
+
+--------------------------------
+类不仅可以用关键字class来定义，也可以用struct或union来定义。
+C++中struct定义的类也可以有成员函数
+两者定义的类的唯一区别在于由class定义的类所有成员的默认访问权限为private，而struct定义的类所有成员默认访问权限为public
+union定义的类访问权限默认为public
+
+
+
+
+
+
+
+--------------------------------
+操作符重载（Overloading operators）
+CVector CVector::operator+ (CVector param) {
+    CVector temp;
+    temp.x = x + param.x;
+    temp.y = y + param.y;
+    return (temp);
+}
+
+
+
+
+
+--------------------------------
+关键字this 通常被用在一个class内部，指正在被执行的该class的对象(object)在内存中的地址。
+它是一个指针，其值永远是自身object的地址。
+
+
+
+
+
+--------------------------------
+静态成员(Static members)
+可以是数据，也可以是函数。
+被称作类变量"class variables"，因为它们的内容不依赖于某个对象，对同一个class的所有object具有相同的值。
+
+它其实是一个全域变量。唯一的不同是它的名字跟在class的后面。
+
+
+
+
+--------------------------------
+在class的声明中只能够包括static member的原型(声明)，而不能够包括其定义(初始化操作)。
+为了初始化一个静态数据成员，我们必须在class之外(在全域范围内)，包括一个正式的定义，就像上面例子中做法一样。
+
+
+内部声明，外部也要定义
+#include <iostream>
+
+class CDummy {
+    public:
+        static int n;
+        CDummy () { n++; };
+        ~CDummy () { n--; };
+};
+
+int CDummy::n=0;
+
+int main () {
+    CDummy a;
+    CDummy b[5];
+    CDummy * c = new CDummy;
+    cout << a.n << endl;
+    delete c;
+    cout << CDummy::n << endl;
+    return 0;
+} 
+
+
+
+
+
+
+
+
+
+
