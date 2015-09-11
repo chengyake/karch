@@ -1,0 +1,108 @@
+------------------------
+命令是不区分大小写
+参数之间使用空格进行间隔
+符号"#"后面的内容被认为是注释。
+
+
+
+
+
+
+
+
+
+
+
+------------------------
+PROJECT(main)
+项目的名称是 main
+
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+限定了 CMake 的版本
+
+AUX_SOURCE_DIRECTORY(. DIR_SRCS)
+将当前目录中的源文件名称赋值给变量 DIR_SRCS
+
+ADD_EXECUTABLE(main ${DIR_SRCS})
+变量 DIR_SRCS 中的源文件需要编译成一个名称为 main 的可执行文件
+
+ADD_SUBDIRECTORY(src)
+项目包含一个子目录 src 
+
+TARGET_LINK_LIBRARIES(main Test)
+可执行文件 main 需要连接一个名为Test的链接库 
+
+
+ADD_LIBRARY ( Test ${DIR_TEST1_SRCS})
+将 src 目录中的源文件编译为共享库
+
+
+MESSAGE(STATUS "Using bundled Findlibdb.cmake...")
+将参数的内容输出到终端
+
+
+
+find_path(<VAR> name1 [path1 path2 ...])
+该命令在参数 path* 指示的目录中查找文件 name1 并将查找到的路径保存在变量 VAR 中
+FIND_PATH(
+LIBDB_CXX_INCLUDE_DIR
+db_cxx.h 
+/usr/include/ 
+/usr/local/include/ 
+)
+
+
+FIND_LIBRARY
+用于查找链接库并将结果保存在变量中
+FIND_LIBRARY(
+LIBDB_CXX_LIBRARIES NAMES  db_cxx
+PATHS /usr/lib/ /usr/local/lib/
+)
+
+
+
+SET(<VARNAME> <VARVALUE>)
+设置了变量 CMAKE_CXX_FLAGS_DEBUG 
+SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
+
+
+
+
+
+
+
+CMake的交叉编译问题
+SET(CMAKE_SYSTEM_NAME Linux)
+SET(CMAKE_FIND_ROOT_PATH "/home/release/arm11/library/gnuarm-4.4.2/")
+SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+SET(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+SET(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+SET(CMAKE_C_COMPILER "/usr/local/cross-tools/arm11/bin/linux-gnueabi-gcc")
+CMAKE_C_COMPILER是C语言编译器，CMAKE_CXX_COMPILE是C++语言编译器
+
+
+
+
+
+
+
+------------------------
+ccmake 
+与命令 cmake 的不同之处在于 ccmake 提供了一个图形化的操作界面
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
