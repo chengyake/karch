@@ -1,0 +1,8 @@
+void pthread_cleanup_push(void (*routine) (void  *),  void *arg)
+/* do some work */
+void pthread_cleanup_pop(int execute)
+if是在do some work时会出现非正常终止,那样的话,系统会根据pthread_cleanup_push中提供的函数,和参数进行解锁操作或者其他操作,以免造成死锁!
+
+
+补充:
+在线程宿主函数中主动调用return，如果return语句包含在pthread_cleanup_push()/pthread_cleanup_pop()对中，则不会引起清理函数的执行，反而会导致segment fault。
