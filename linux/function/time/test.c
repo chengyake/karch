@@ -6,9 +6,12 @@ int main(void) {
 
     time_t timer;//time_t就是long int 类型
     struct tm *tblock;
+
     timer = time(NULL);//这一句也可以改成time(&timer);
-    timer = (time_t)((0x8D2835D437B1C00-621355968000000000)/10000000);
+    //timer = time(&timer);
+    //timer = (time_t)((0x8D2835D437B1C00-621355968000000000)/10000000);
     tblock = localtime(&timer);
+    printf("%02d, %02d\n", tblock->tm_hour, tblock->tm_min);
     printf("Local time is: %s\n",asctime(tblock));
 
     //printf("%d\n", sizeof(time_t));
@@ -17,7 +20,7 @@ int main(void) {
 
 }
 
-00D2D53E2393D288 
+//00D2D53E2393D288 
 
 
 
