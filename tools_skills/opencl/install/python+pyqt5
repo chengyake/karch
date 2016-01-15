@@ -1,0 +1,53 @@
+https://riverbanckcomputing.com/software/sip/download
+下载sip-4.17.tar.gz
+
+https://riverbankcomputing.com/software/pyqt/download5
+下载PyQt-gpl-5.5.1.tar.gz 	
+
+
+
+
+siplib.c:20:20: fatal error: Python.h: 没有那个文件或目录
+sudo apt-get install python-dev
+
+
+进入sip目录
+python configure.py
+make
+sudo make install
+
+
+进入pyqt目录
+
+python configure.py
+make
+sudo make install
+
+
+Error: Use the --qmake argument to explicitly specify a working Qt qmake.
+配置qmake路径
+
+
+
+
+fatal error: qgeolocation.h: 没有那个文件或目录
+python configure.py --disable=QtPositioning
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
