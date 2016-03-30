@@ -46,7 +46,8 @@ int read_cl(char *filename, char *text) {
 }
 
 int main(int argc, char* argv[]) {
-
+    
+    cl_int i;
 	cl_uint plat_num;
 	cl_platform_id plat_id = NULL;
 	cl_int	ret = clGetPlatformIDs(0, NULL, &plat_num);
@@ -101,30 +102,54 @@ int main(int argc, char* argv[]) {
     printf("input:\n%d, %d, %d, %d\n", input[0], input[1], input[2], input[3]);
 	char *output = (char*) malloc(strlength);
 
-	cl_mem inputBuffer = clCreateBuffer(context, CL_MEM_READ_ONLY|CL_MEM_COPY_HOST_PTR, (strlength) * sizeof(char),(void *) input, NULL);
+	cl_mem inputBuffer = clCreateBuffer(context, CL_MEM_READ_WRITE |CL_MEM_COPY_HOST_PTR, (strlength) * sizeof(char),(void *) input, NULL);
 	cl_mem outputBuffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY , (strlength) * sizeof(char), NULL, NULL);
 
 	cl_kernel kernel = clCreateKernel(program, "mmap", NULL);
 
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&inputBuffer);
 	ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&outputBuffer);
-	
-	size_t global_work_size[1] = {strlength};
-	ret = clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
-    if(ret < 0) {
-        printf("clEnqueueNDRangeKernel error\n");
+
+    size_t global_work_size[1] = {strlength};
+
+
+
+    time_t dec=0;
+
+    for(i=0; i<1000; i++) {
+        ret = clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
+        if(ret < 0) {
+            printf("clEnqueueNDRangeKernel error\n");
+        }
     }
 
-	ret = clEnqueueReadBuffer(commandQueue, outputBuffer, CL_TRUE, 0, strlength * sizeof(char), output, 0, NULL, NULL);
-	
-	printf("output:\n%d, %d, %d, %d\n", output[0], output[1], output[2], output[3]);
+
+
+
+
+
+	//ret = clEnqueueReadBuffer(commandQueue, outputBuffer, CL_TRUE, 0, strlength * sizeof(char), output, 0, NULL, NULL);
+	//ret = clEnqueueReadBuffer(commandQueue, inputBuffer, CL_TRUE, 0, strlength * sizeof(char), output, 0, NULL, NULL);
+
+    char* p = (char*) clEnqueueMapBuffer(commandQueue, inputBuffer, CL_TRUE, CL_MAP_READ, 0, 4, 0, NULL, NULL, &ret);
+    if(ret < 0) {
+        printf("clEnqueueMapBuffer failed. \n");
+    }
+
+	clFlush(commandQueue);
+
+
+	//printf("output:\n%d, %d, %d, %d\n", output[0], output[1], output[2], output[3]);
+	printf("output:\n%d, %d, %d, %d\n", p[0], p[1], p[2], p[3]);
+
+    ret = clEnqueueUnmapMemObject(commandQueue, inputBuffer, p, 0, NULL, NULL);
 
 	ret = clReleaseKernel(kernel);				
 	ret = clReleaseProgram(program);	
-	ret = clReleaseMemObject(inputBuffer);		
+	ret = clReleaseMemObject(inputBuffer);
 	ret = clReleaseMemObject(outputBuffer);
 	ret = clReleaseCommandQueue(commandQueue);
-	ret = clReleaseContext(context);			
+	ret = clReleaseContext(context);
 
 	if (output != NULL)
 	{
