@@ -110,20 +110,30 @@ int main(int argc, char* argv[]) {
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&inputBuffer);
 	ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void *)&outputBuffer);
 
+	cl_kernel kernel1 = clCreateKernel(program, "mmap1", NULL);
+
+	ret = clSetKernelArg(kernel1, 0, sizeof(cl_mem), (void *)&inputBuffer);
+	ret = clSetKernelArg(kernel1, 1, sizeof(cl_mem), (void *)&outputBuffer);
+
+
+
     size_t global_work_size[1] = {strlength};
 
 
 
     time_t dec=0;
 
-    for(i=0; i<1000; i++) {
+    for(i=0; i<100; i++) {
         ret = clEnqueueNDRangeKernel(commandQueue, kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
         if(ret < 0) {
             printf("clEnqueueNDRangeKernel error\n");
         }
     }
 
-
+    ret = clEnqueueNDRangeKernel(commandQueue, kernel1, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
+    if(ret < 0) {
+        printf("clEnqueueNDRangeKernel error\n");
+    }
 
 
 
@@ -145,6 +155,7 @@ int main(int argc, char* argv[]) {
     ret = clEnqueueUnmapMemObject(commandQueue, inputBuffer, p, 0, NULL, NULL);
 
 	ret = clReleaseKernel(kernel);				
+	ret = clReleaseKernel(kernel1);				
 	ret = clReleaseProgram(program);	
 	ret = clReleaseMemObject(inputBuffer);
 	ret = clReleaseMemObject(outputBuffer);
