@@ -6,10 +6,10 @@
 #define SLAVE_ADDR	(0xD4)
 
 
-volatile unsigned int i,j;                  // Use volatile to prevent removal
+volatile unsigned int i;                  // Use volatile to prevent removal
 unsigned char reg, value_w, *value_r;      // Variable for transmitted data
 unsigned char I2C_State, Success, Transmit;     // State variable
-unsigned char button=0, display=0, timer_count=0, batfet=0, en_fet=0;;
+unsigned char button=0, display=0, timer_count=0, batfet=0, en_fet=0, charge_display_count=0;
 unsigned char reg_stat, reg_fault, reg_batv;
 
 #ifdef ls_debug
@@ -17,9 +17,11 @@ unsigned char reg_stat, reg_fault, reg_batv;
 unsigned char regs[21]={0};
 #endif
 
-void get_batv();
+
 void disable_batfet();
 void enable_batfet();
+void get_batv(unsigned char n);
+void mdelay(unsigned char n);
 
 
 // Port 1 interrupt service routine
@@ -33,9 +35,12 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
 	//min 3.6 max 4.2
-	button = 1;
-	P1IFG &= ~0x04;                           // P1.2 IFG cleared
-	LPM0_EXIT;
+    mdelay(1);
+    if((P1IN&0x04) == 0) {
+    	button = 1;
+    	P1IFG &= ~0x04;                           // P1.2 IFG cleared
+		LPM0_EXIT;
+    }
 }
 
 
@@ -49,6 +54,7 @@ void __attribute__ ((interrupt(PORT2_VECTOR))) Port_2 (void)
 #error Compiler not supported!
 #endif
 {
+	charge_display_count = 30;
 	P2IFG &= ~0x20;                           // P2.5 IFG cleared
 	LPM0_EXIT;
 }
@@ -299,22 +305,48 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
 }
 
 
+void _get_batv() {
 
-void get_batv() {
+	unsigned char check;
 	//start adc
-	read_bq2589x(0x02, &reg_batv);
-	write_bq2589x(0x02, reg_batv|0x80);
+	for(i=5; i>0; i--) {
+		read_bq2589x(0x02, &check);
+		write_bq2589x(0x02, check|0x80);
+	    for(i=1000; i>0; i--) {
+	    	__delay_cycles(10000);
+	    	read_bq2589x(0x02, &check);
+	    	if((check&0x80) == 0) {
+	    		read_bq2589x(0x0E, &check);
+	    		break;
+	    	}
+	    }
+	    if(check != 0x00) {break;}
+	};
+
+	reg_batv=check;
+}
 
 
-    for(j=1000; j>0; j--) {
-    	__delay_cycles(10000);
-    	read_bq2589x(0x02, &reg_batv);
-    	if((reg_batv&0x80) == 0) {
-    		read_bq2589x(0x0E, &reg_batv);
-    		break;
-    	}
-    }
+/*
+ * mode 1: discharge
+ * mode 2: on-charge
+ */
+void get_batv(unsigned char mode) {
 
+	unsigned char v;
+
+	if(mode == 1) {
+		_get_batv();
+	} else if(mode == 2) {
+		charge_display_count++;
+		if(charge_display_count>=30) {	//~30s update voltage level
+			read_bq2589x(0x03, &v);
+			write_bq2589x(0x03, v&(~0x10));
+			_get_batv();
+			write_bq2589x(0x03, v|0x10);
+			charge_display_count=0;
+		}
+	}
 }
 
 void disable_batfet() {
@@ -338,9 +370,8 @@ void init_bq2589x() {
 
 	unsigned char v;
 
-
-	//get_batv();
-	//disable_batfet();
+	read_bq2589x(0x06, &v);
+	write_bq2589x(0x06, (v&0x03)|(0x80));//voltage limit 4.352V = 3.840 + 0.512
 
 	//disable wdog and stat pin
 	read_bq2589x(0x07, &v);
@@ -348,13 +379,26 @@ void init_bq2589x() {
 
 	//min sys 3.6v
 	read_bq2589x(0x03, &v);
-	write_bq2589x(0x03, (v&(~0x0E))|0x0C);
+	write_bq2589x(0x03, (v&(~0x2E))|0x0C);//mini sys 3.6V && disable OTG
 
 	//thermal threshold 60`;
 	read_bq2589x(0x08, &v);
 	write_bq2589x(0x08, v&(~0x03));
 
 }
+
+//10ms
+void mdelay(unsigned char n) {
+       volatile int i,j,k;
+       for(k=0; k<n; k++) {
+           for(i=0; i<3; i++) {
+               for(j=0; j<284; j++) {
+                  __no_operation();
+               }
+           }
+       }
+}
+
 
 void delay_cycles(unsigned char t) {
 
@@ -365,7 +409,13 @@ void delay_cycles(unsigned char t) {
 
 }
 
-
+/*
+ * P1.2                Button
+ * P1.3                VOTG
+ * P2.5                INT BQ
+ * P1.6-P1.7   I2C
+ * P2.0-P2.3   LEDs
+ */
 int main(void)
 {
 
@@ -444,17 +494,16 @@ int main(void)
     	//display power percent
     	if(display) {
     		  unsigned int percent;
-    		  get_batv();
-    		  read_bq2589x(0x12, &reg_fault);
-    		  percent = (reg_batv&0x7F)*20 + 2304 - reg_fault*10;
+    		  get_batv(display);
+    		  percent = (reg_batv&0x7F)*20 + 2304;
 
     		  //8 1 2 4
     		  P2OUT &= ~0x0F;
     		  if(percent <= 3600) {
     			  P2OUT |= 0x04;                            //1 led
-    		  } else if (percent < 3900) {
+    		  } else if (percent < 3950) {
     			  P2OUT |= 0x06;                            //2 led
-    		  } else if (percent < 4100) {
+    		  } else if (percent < 4250) {
     			  P2OUT |= 0x07;                            //3 led
     		  } else {
     			  P2OUT |= 0x0F;							//4 led
@@ -484,7 +533,6 @@ int main(void)
     	__bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-
 
 
 
