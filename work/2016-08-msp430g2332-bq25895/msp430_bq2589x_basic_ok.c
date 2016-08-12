@@ -1,26 +1,46 @@
 #include <msp430.h>
 
-//#define ls_debug
+//50ms/per
+#define	LED_ON_TIME	(20)
+#define	LONG_PRESS_TIME	(40)
 
-//SLAVE_ADDR	(0x6A)
-#define SLAVE_ADDR	(0xD4)
+
+#define LS_DEBUG
+
+#define SLAVE_ADDR	(0xD4)	//0x6A
+
+volatile unsigned int i;                  		// Use volatile to prevent removal
 
 
-volatile unsigned int i;                  // Use volatile to prevent removal
-unsigned char reg, value_w, *value_r;      // Variable for transmitted data
+
+/*
+ * 20160812 14:32
+ * mode:
+ * 0:idle    1:display once		2:charge	3:work
+ */
+
+//lts
+unsigned char mode=0, reg_batv=0, batfet=0, votg=0, charge_complate=0;
+unsigned char button=0, button_count=0, mode1_count=0;
+unsigned short mode23_count=0;
+
+//const 							 close 1led  2led  3led  4leds
+const unsigned short idle_th[] = 		{3700, 3850, 3950, 4050, 4240};
+const unsigned short charge_th[] = 		{3700, 3850, 3950, 4050, 4240};
+const unsigned short discharge_th[] = 	{3700, 3850, 3950, 4050, 4240};
+
+//just for i2c
+unsigned char reg, value_w, *value_r;      		// Variable for transmitted data
 unsigned char I2C_State, Success, Transmit;     // State variable
-unsigned char button=0, display=0, timer_count=0, batfet=0, en_fet=0, charge_display_count=0;
-unsigned char reg_stat, reg_fault, reg_batv;
-
-#ifdef ls_debug
 //dump debug
+#ifdef LS_DEBUG
 unsigned char regs[21]={0};
 #endif
 
 
 void disable_batfet();
 void enable_batfet();
-void get_batv(unsigned char n);
+void get_batv();
 void mdelay(unsigned char n);
 
 
@@ -34,15 +54,13 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #error Compiler not supported!
 #endif
 {
-	//min 3.6 max 4.2
-    mdelay(1);
+    //min 3.6 max 4.2
     if((P1IN&0x04) == 0) {
-    	button = 1;
-    	P1IFG &= ~0x04;                           // P1.2 IFG cleared
-		LPM0_EXIT;
+        button = 1;
+        P1IFG &= ~0x04;                           // P1.2 IFG cleared
+        LPM0_EXIT;
     }
 }
-
 
 // Port 2 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -54,9 +72,8 @@ void __attribute__ ((interrupt(PORT2_VECTOR))) Port_2 (void)
 #error Compiler not supported!
 #endif
 {
-	charge_display_count = 30;
-	P2IFG &= ~0x20;                           // P2.5 IFG cleared
-	LPM0_EXIT;
+    P2IFG &= ~0x20;                           // P2.5 IFG cleared
+    LPM0_EXIT;
 }
 
 
@@ -70,15 +87,22 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 #error Compiler not supported!
 #endif
 {
-	if(timer_count < 21) {
-		CCR0 += 50000;                            // Add Offset to CCR0
-		timer_count++;
-	} else {
-		timer_count=0;
-		CCTL0 &= ~CCIE;                             // CCR0 interrupt enabled
-		LPM0_EXIT;										//double check
-	}
+    if(mode == 1) {
+        mode1_count++;
+        mode23_count=0;
+        button_count=0;
+    } else if(mode != 0) {
+    	if((P1IN&0x04) == 0) {
+    		button_count++;
+    	} else {
+    		button_count=0;
+    	}
+    	mode23_count++;
+    	mode1_count=0;
+    }
 
+    CCR0 += 50000;                              // Add Offset to CCR0
+    LPM0_EXIT;									//double check
 }
 
 /******************************************************
@@ -110,14 +134,14 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
             break;
 
         case 1: // Receive Address Ack/Nack bit
-        	Success++;
+            Success++;
             I2C_State = 2;                // Go to next state: check (N)Ack
             USICTL0 &= ~USIOE;            // SDA = input
             USICNT |= 0x01;               // Bit counter=1, receive (N)Ack bit
             break;
 
         case 2: // Process Address Ack/Nack & handle reg TX
-        	Success++;
+            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
@@ -131,7 +155,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
             break;
 
         case 3: //Get reg Ack/Nack bit
-        	Success++;
+            Success++;
             if(Transmit == 1) {
                 I2C_State = 4;               // Go to next state: check (N)Ack
             } else {
@@ -142,7 +166,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
             break;
 
         case 4: // Process Address Ack/Nack & handle data TX
-        	Success++;
+            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
@@ -157,14 +181,14 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 5: // Get Ack/Nack bit
-        	Success++;
+            Success++;
             I2C_State = 6;                // Go to next state: check (N)Ack
             USICTL0 &= ~USIOE;            // SDA = input
             USICNT |= 0x01;               // Bit counter=1, receive (N)Ack bit
             break;
 
         case 6: // Check ACK and Prep Stop Condition
-        	Success++;
+            Success++;
             USICTL0 |= USIOE;             // SDA = output
             USISRL = 0x00;
             USICNT |=  0x01;              // Bit counter= 1, SCL high, SDA low
@@ -173,7 +197,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 7:// Generate Stop Condition
-        	Success++;
+            Success++;
             USISRL = 0x0FF;               // USISRL = 1 to release SDA
             USICTL0 |= USIGE;             // Transparent latch enabled
             USICTL0 &= ~(USIGE+USIOE);    // Latch/SDA output disabled
@@ -183,7 +207,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 8:
-        	Success++;
+            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
@@ -200,7 +224,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 9: // Generate Start Condition & send address to slave
-        	Success++;
+            Success++;
             USISRL = 0x00;                // Generate Start Condition...
             USICTL0 |= USIGE+USIOE;
             USICTL0 &= ~USIGE;
@@ -213,14 +237,14 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 10: // Receive Address Ack/Nack bit
-        	Success++;
+            Success++;
             I2C_State = 11;                // Go to next state: check (N)Ack
             USICTL0 &= ~USIOE;            // SDA = input
             USICNT |= 0x01;               // Bit counter=1, receive (N)Ack bit
             break;
 
         case 11: // Process Address Ack/Nack & handle data Rx
-        	Success++;
+            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
@@ -235,7 +259,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 12: // Send Data Ack/Nack bit
-        	Success++;
+            Success++;
             *value_r = USISRL;             //get value from register
 
             USICTL0 |= USIOE;             // SDA = output
@@ -288,7 +312,7 @@ unsigned char write_bq2589x(unsigned char r, unsigned char v) {
     USICTL1 |= USIIFG;                      // Set flag and start communication
     LPM0;                                   // CPU off, await USI interrupt
     if(Success == 8)
-    	return 0;
+        return 0;
     return 1;
 }
 
@@ -300,112 +324,186 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
     USICTL1 |= USIIFG;                        // Set flag and start communication
     LPM0;                                     // CPU off, await USI interrupt
     if(Success == 11)
-    	return 0;
+        return 0;
     return 1;
 }
 
 
-void _get_batv() {
+void get_batv() {
 
-	unsigned char check;
-	//start adc
-	for(i=5; i>0; i--) {
-		read_bq2589x(0x02, &check);
-		write_bq2589x(0x02, check|0x80);
-	    for(i=1000; i>0; i--) {
-	    	__delay_cycles(10000);
-	    	read_bq2589x(0x02, &check);
-	    	if((check&0x80) == 0) {
-	    		read_bq2589x(0x0E, &check);
-	    		break;
-	    	}
-	    }
-	    if(check != 0x00) {break;}
-	};
+    unsigned char check;
+    //start adc
+    if(charge_complate == 1){
+    	reg_batv = 0x3F;
+    	return;
+    }
+    for(i=5; i>0; i--) {
+        read_bq2589x(0x02, &check);
+        write_bq2589x(0x02, check|0x80);
+        for(i=1000; i>0; i--) {
+            __delay_cycles(10000);
+            read_bq2589x(0x02, &check);
+            if((check&0x80) == 0) {
+                read_bq2589x(0x0E, &check);
+                break;
+            }
+        }
+        if(check != 0x00) {break;}
+    };
 
-	reg_batv=check;
+    reg_batv=check;
+}
+
+void disable_batfet() {
+    unsigned char v;
+    batfet=0;
+    read_bq2589x(0x09, &v);
+    write_bq2589x(0x09, (v|0x20)&(~0x08));
+    //P1OUT &= (~0x08);
+}
+
+void enable_batfet() {
+    unsigned char v;
+    batfet=1;
+    read_bq2589x(0x09, &v);
+    write_bq2589x(0x09, v&(~0x20));
+    //P1OUT |= 0x08;
+
+}
+
+void delay_cycles(unsigned char t) {
+
+    for(i=t; i>0; i--) {
+        __delay_cycles(10000);
+    }
+
+
+}
+
+void enable_timer() {
+    CCR0 = 50000;
+    CCTL0 |= CCIE;                            // CCR0 interrupt enabled
+    TACTL = TASSEL_2 + MC_2;                  // SMCLK, contmode
+}
+
+void disable_timer() {
+    CCTL0 &= ~CCIE;                             // CCR0 interrupt enabled
+}
+
+unsigned char get_idx(unsigned short percent, const unsigned short *array) {
+
+    if(percent <= array[0]) {
+        return 0;
+    } else if(percent <= array[1]) {
+        return 1;
+    } else if(percent <= array[2]) {
+        return 2;
+    } else if(percent <= array[3]) {
+        return 3;
+    } else if(percent <= array[4]) {
+        return 4;
+    } else {
+    	return 4;
+    }
+
 }
 
 
 /*
- * mode 1: discharge
- * mode 2: on-charge
+ *  mode 0:all on, 1:latest flash
+ *
  */
-void get_batv(unsigned char mode) {
+void light_leds(unsigned int mode, unsigned int percent) {
 
-	unsigned char v;
+    static unsigned char flash=0;
+    unsigned char a,b, idx, led_mode;
 
-	if(mode == 1) {
-		_get_batv();
-	} else if(mode == 2) {
-		charge_display_count++;
-		if(charge_display_count>=30) {	//~30s update voltage level
-			read_bq2589x(0x03, &v);
-			write_bq2589x(0x03, v&(~0x10));
-			_get_batv();
-			write_bq2589x(0x03, v|0x10);
-			charge_display_count=0;
-		}
-	}
-}
+    if(mode > 1 && charge_complate == 1) {
+    	P2OUT|=0x0F;
+    	return;
+    }
+    switch (mode) {
 
-void disable_batfet() {
-	unsigned char v;
-	batfet=0;
-	read_bq2589x(0x09, &v);
-	write_bq2589x(0x09, (v|0x20)&(~0x08));
-	//P1OUT &= (~0x08);
-}
+        case 0:
+            led_mode=0;
+            idx=0;
+            break;
+        case 1:
+            led_mode=0;
+            idx=get_idx(percent, &idle_th[0]);
+            break;
+        case 2:
+            led_mode=1;
+            idx=get_idx(percent, charge_th);
+            break;
+        case 3:
+            led_mode=1;
+            idx=get_idx(percent, discharge_th);
+            break;
+        default:
+            led_mode=0;
+            idx=0;
+            break;
+    }
+    switch (idx) {
+        case 0:
+            a=0x00;
+            b=0x00;
+            break;
+        case 1:
+            a=0x00;
+            b=0x04;
+            break;
+        case 2:
+            a=0x04;
+            b=0x06;
+            break;
+        case 3:
+            a=0x06;
+            b=0x07;
+            break;
+        case 4:
+            a=0x07;
+            b=0x0F;
+            break;
+        default:
+            a=0x00;
+            b=0x00;
+            break;
+    }
 
-void enable_batfet() {
-	unsigned char v;
-	batfet=1;
-	read_bq2589x(0x09, &v);
-	write_bq2589x(0x09, v&(~0x20));
-	//P1OUT |= 0x08;
+    if(led_mode) {
+        flash^=0x01;
+        if(flash)
+            P2OUT = (P2OUT&(~0x0F))|a;
+        else
+            P2OUT = (P2OUT&(~0x0F))|b;
 
+    } else {
+        P2OUT = (P2OUT&(~0x0F))|b;
+    }
 }
 
 void init_bq2589x() {
 
-	unsigned char v;
+    unsigned char v;
 
-	read_bq2589x(0x06, &v);
-	write_bq2589x(0x06, (v&0x03)|(0x80));//voltage limit 4.352V = 3.840 + 0.512
+    write_bq2589x(0x06, 0x12);//Ipre and Iterm:128mA
 
-	//disable wdog and stat pin
-	read_bq2589x(0x07, &v);
-	write_bq2589x(0x07, (v|0x40)&(~0x30));
+    read_bq2589x(0x06, &v);
+    write_bq2589x(0x06, (v&0x03)|(0x80));//voltage limit 4.352V = 3.840 + 0.512
 
-	//min sys 3.6v
-	read_bq2589x(0x03, &v);
-	write_bq2589x(0x03, (v&(~0x2E))|0x0C);//mini sys 3.6V && disable OTG
+    //disable wdog and stat pin
+    read_bq2589x(0x07, &v);
+    write_bq2589x(0x07, (v|0x40)&(~0x30));
 
-	//thermal threshold 60`;
-	read_bq2589x(0x08, &v);
-	write_bq2589x(0x08, v&(~0x03));
+    //min sys 3.6v
+    read_bq2589x(0x03, &v);
+    write_bq2589x(0x03, (v&(~0x2E))|0x0C);//mini sys 3.6V && disable OTG
 
-}
-
-//10ms
-void mdelay(unsigned char n) {
-       volatile int i,j,k;
-       for(k=0; k<n; k++) {
-           for(i=0; i<3; i++) {
-               for(j=0; j<284; j++) {
-                  __no_operation();
-               }
-           }
-       }
-}
-
-
-void delay_cycles(unsigned char t) {
-
-	for(i=t; i>0; i--) {
-    	__delay_cycles(10000);
-	}
-
+    //thermal threshold 60`;
+    read_bq2589x(0x08, &v);
+    write_bq2589x(0x08, v&(~0x03));
 
 }
 
@@ -418,12 +516,12 @@ void delay_cycles(unsigned char t) {
  */
 int main(void)
 {
-
+    unsigned char v;
     WDTCTL = WDTPW + WDTHOLD;                 // Stop watchdog
     /*if (CALBC1_1MHZ==0xFF)					// If calibration constant erased
-    {
-        while(1);                               // do not load, trap CPU!!
-    }*/
+      {
+      while(1);                               // do not load, trap CPU!!
+      }*/
     DCOCTL = 0;                               // Select lowest DCOx and MODx settings
     BCSCTL1 = CALBC1_1MHZ;                    // Set DCO
     DCOCTL = CALDCO_1MHZ;
@@ -442,97 +540,151 @@ int main(void)
     P2IES |= 0x20;                            // P2.5 Hi/lo edge
     P2IFG &= ~0x20;                           // P2.5 IFG cleared
 
-    batfet = 0;
-    button = 0;
-    display = 0;
-    timer_count=0;
-
     init_bq2589x();
 
     __no_operation();
 
-#ifdef ls_debug
-        //debug:dump all register
-        for(i=sizeof(regs); i>0; i--) {
-        	read_bq2589x(i-1, &regs[i-1]);
-        }
+    //enble batfet if need
+    if(batfet == 0) {
+        enable_batfet();
+        delay_cycles(10);
+    }
+    read_bq2589x(0x03, &v);
+    write_bq2589x(0x03, v&(~0x10));
+    get_batv();
+    write_bq2589x(0x03, v|0x10);
+
+
+#ifdef LS_DEBUG
+    //debug:dump all register
+    for(i=sizeof(regs); i>0; i--) {
+        read_bq2589x(i-1, &regs[i-1]);
+    }
 #endif
 
     while(1) {
 
-    	if(batfet == 0) enable_batfet();
 
-    	delay_cycles(10);
+        unsigned char reg_stat, reg_fault;
 
+        //error handle
         read_bq2589x(0x0C, &reg_fault);
-        read_bq2589x(0x0B, &reg_stat);
-
-
         if(reg_fault != 0x00) {
-        	read_bq2589x(0x0C, &reg_fault);
+            read_bq2589x(0x0C, &reg_fault);
+        }
+
+        //mode, votg
+        charge_complate=0;
+        read_bq2589x(0x0B, &reg_stat);
+        if((reg_stat&0x18) == 0x18) {
+        	charge_complate=1;
+        }
+        if((reg_stat&0x04) == 0x04) { 			//power good
+            button=0;//useless
+            if(mode < 2) mode = 2;
+            if((reg_stat&0xE0) == 0x20) {       //usb pc
+                if(button_count == LONG_PRESS_TIME) {
+                    votg^=0x01;
+                    if(votg) {
+                    	mode = 3;
+                    } else {
+                    	mode = 2;
+                    }
+                }
+            } else {                            //adapter
+                votg = 0;
+                mode = 2;
+            }
+        } else {								//no power
+            votg = 0;
+            if(button == 1 || mode == 1) {
+                button=0;
+                mode = 1;
+            } else {
+                mode = 0;
+            }
         }
 
 
-        if((reg_stat&0x04) == 0x04) { 				//power good
-        	display = 2;
-        	if((reg_stat&0xE0) == 0x20) { 		//usb pc
-        		if(button == 1) {
-        			en_fet^=0x01;
-        		}
-        	} else {
-        		en_fet = 0;
-        	}
-        } else {									//no power
-        	en_fet = 0;
-        	if(button == 1 || timer_count > 0) {
-        		display = 1;
-        	} else {
-        		display = 0;
-        	}
+        switch (mode) {
+            case 0:
+            	button_count=0;
+            	mode1_count=0;
+            	mode23_count=0;
+                disable_timer();
+                P2OUT &= ~0x0F;
+                P1OUT &= (~0x08);
+                if(batfet) {
+                    disable_batfet();
+                }
+
+                break;
+
+            case 1:
+            	button_count=0;
+            	mode23_count=0;
+                if(mode1_count == 0) {
+                    //enble batfet if need
+                    if(batfet == 0) {
+                        enable_batfet();
+                        delay_cycles(10);
+                    }
+                    get_batv();
+                    mode1_count++;
+                    enable_timer();
+                } else if(mode1_count > 0 && mode1_count < LED_ON_TIME) {
+                    P1OUT &= (~0x08);
+                    if(batfet) disable_batfet();
+                    mode1_count++;
+                    enable_timer();
+                } else if(mode1_count >= LED_ON_TIME) {
+                    mode1_count=0;
+                    disable_timer();
+                    P2OUT &= ~0x0F;
+                    P1OUT &= (~0x08);
+                    if(batfet) {
+                        disable_batfet();
+                    }
+                    mode = 0;
+                }
+                light_leds(mode, (reg_batv&0x7F)*20 + 2304);
+                break;
+
+            case 2:
+            	votg=0;
+                P1OUT &= (~0x08);
+                enable_timer();
+                mode23_count++;
+                if(mode23_count>=20*60) {
+                    read_bq2589x(0x03, &v);
+                    write_bq2589x(0x03, v&(~0x10));
+                    get_batv();
+                    write_bq2589x(0x03, v|0x10);
+                    mode23_count=0;
+                }
+                light_leds(mode, (reg_batv&0x7F)*20 + 2304);
+                break;
+
+            case 3:
+            	votg=1;
+            	if(batfet == 0) enable_batfet();
+                P1OUT |= 0x08;
+                enable_timer();
+                mode23_count++;
+                if(mode23_count>=20*60) {
+                    read_bq2589x(0x03, &v);
+                    write_bq2589x(0x03, v&(~0x10));
+                    get_batv();
+                    write_bq2589x(0x03, v|0x10);
+                    mode23_count=0;
+                }
+                light_leds(mode, (reg_batv&0x7F)*20 + 2304);
+
+                break;
         }
 
-    	//display power percent
-    	if(display) {
-    		  unsigned int percent;
-    		  get_batv(display);
-    		  percent = (reg_batv&0x7F)*20 + 2304;
 
-    		  //8 1 2 4
-    		  P2OUT &= ~0x0F;
-    		  if(percent <= 3600) {
-    			  P2OUT |= 0x04;                            //1 led
-    		  } else if (percent < 3950) {
-    			  P2OUT |= 0x06;                            //2 led
-    		  } else if (percent < 4250) {
-    			  P2OUT |= 0x07;                            //3 led
-    		  } else {
-    			  P2OUT |= 0x0F;							//4 led
-    		  }
-    		  if(timer_count == 0) {
-        		  timer_count=1;
-        		  CCR0 = 50000;
-        		  CCTL0 |= CCIE;                             // CCR0 interrupt enabled
-        		  TACTL = TASSEL_2 + MC_2;                  // SMCLK, contmode
-    		  }
-    	} else {
-    		P2OUT &= ~0x0F;
-    	}
-
-
-        if(en_fet == 0) {
-        	P1OUT &= (~0x08);
-        	if(display != 2) {
-        		disable_batfet();
-        	}
-        } else {
-        	P1OUT |= 0x08;
-        }
-
-
-    	button = 0;
-    	__bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
+        __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-
-
 
