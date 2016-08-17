@@ -3,7 +3,7 @@
 //50ms/per
 #define	LED_ON_TIME	(20)
 #define	LONG_PRESS_TIME	(40)
-
+#define SAMPLE_AVG_NUM	(10)
 
 #define LS_DEBUG
 
@@ -23,6 +23,7 @@ volatile unsigned int i;                  		// Use volatile to prevent removal
 unsigned char mode=0, reg_batv=0, batfet=0, votg=0, charge_complate=0;
 unsigned char button=0, button_count=0, mode1_count=0;
 unsigned short mode23_count=0;
+unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
 //const 							 close 1led  2led  3led  4leds
 const unsigned short idle_th[] = 		{3700, 3850, 3950, 4050, 4240};
@@ -484,6 +485,36 @@ void light_leds(unsigned int mode, unsigned int percent) {
     }
 }
 
+void reset_avg_sample() {
+	for(i=0; i<SAMPLE_AVG_NUM; i++) {
+		avg_sample[i]=0;
+	}
+}
+
+unsigned short get_and_update_avg_sample(unsigned short voltage) {
+	unsigned char num=0;
+	unsigned int sum=0;
+	for(i=0; i<SAMPLE_AVG_NUM; i++) {
+		if(avg_sample[i] > 2500) {
+			sum+=avg_sample[i];
+			num++;
+		}
+	}
+
+	if(voltage > 2500) {
+		sum+=voltage;
+		num++;
+		for(i=0; i<SAMPLE_AVG_NUM-1; i++) {
+			avg_sample[i]=avg_sample[i+1];
+		}
+		avg_sample[SAMPLE_AVG_NUM-1]=voltage;
+	}
+	return sum/num;
+
+
+}
+
+
 void init_bq2589x() {
 
     unsigned char v;
@@ -611,6 +642,7 @@ int main(void)
             	button_count=0;
             	mode1_count=0;
             	mode23_count=0;
+            	reset_avg_sample();
                 disable_timer();
                 P2OUT &= ~0x0F;
                 P1OUT &= (~0x08);
@@ -623,6 +655,7 @@ int main(void)
             case 1:
             	button_count=0;
             	mode23_count=0;
+            	reset_avg_sample();
                 if(mode1_count == 0) {
                     //enble batfet if need
                     if(batfet == 0) {
@@ -662,7 +695,7 @@ int main(void)
                     write_bq2589x(0x03, v|0x10);
                     mode23_count=0;
                 }
-                light_leds(mode, (reg_batv&0x7F)*20 + 2304);
+                light_leds(mode, get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304));
                 break;
 
             case 3:
@@ -678,7 +711,7 @@ int main(void)
                     write_bq2589x(0x03, v|0x10);
                     mode23_count=0;
                 }
-                light_leds(mode, (reg_batv&0x7F)*20 + 2304);
+                light_leds(mode, get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304));
 
                 break;
         }
