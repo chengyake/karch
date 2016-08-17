@@ -26,9 +26,9 @@ unsigned short mode23_count=0;
 unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
 //const 							 close 1led  2led  3led  4leds
-const unsigned short idle_th[] = 		{3700, 3850, 3950, 4050, 4240};
-const unsigned short charge_th[] = 		{3700, 3850, 3950, 4050, 4240};
-const unsigned short discharge_th[] = 	{3700, 3850, 3950, 4050, 4240};
+const unsigned short idle_th[] = 		{3600, 3850, 3950, 4050, 4240};
+const unsigned short charge_th[] = 		{3600, 3850, 3950, 4050, 4240};
+const unsigned short discharge_th[] = 	{3600, 3850, 3950, 4050, 4240};
 
 //just for i2c
 unsigned char reg, value_w, *value_r;      		// Variable for transmitted data
