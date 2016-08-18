@@ -2,9 +2,9 @@
 
 //50ms/per
 #define	LED_ON_TIME	(20)
-#define	LONG_PRESS_TIME	(40)
+#define	LONG_PRESS_TIME	(30)
 #define SAMPLE_AVG_NUM	(10)
-
+#define BAT_LOW_VERSION
 #define LS_DEBUG
 
 #define SLAVE_ADDR	(0xD4)	//0x6A
@@ -25,11 +25,16 @@ unsigned char button=0, button_count=0, mode1_count=0;
 unsigned short mode23_count=0;
 unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
+#ifdef BAT_LOW_VERSION
 //const 							 close 1led  2led  3led  4leds
-const unsigned short idle_th[] = 		{3600, 3850, 3950, 4050, 4240};
-const unsigned short charge_th[] = 		{3600, 3850, 3950, 4050, 4240};
-const unsigned short discharge_th[] = 	{3600, 3850, 3950, 4050, 4240};
-
+const unsigned short idle_th[] = 		{3600, 3750, 3850, 3980, 4100};
+const unsigned short charge_th[] = 		{3600, 3750, 3850, 3980, 4100};
+const unsigned short discharge_th[] = 	{3600, 3750, 3850, 3980, 4100};
+#else
+const unsigned short idle_th[] = 		{3600, 3800, 3950, 4100, 4240};
+const unsigned short charge_th[] = 		{3600, 3800, 3950, 4100, 4240};
+const unsigned short discharge_th[] = 	{3600, 3800, 3950, 4100, 4240};
+#endif
 //just for i2c
 unsigned char reg, value_w, *value_r;      		// Variable for transmitted data
 unsigned char I2C_State, Success, Transmit;     // State variable
@@ -334,7 +339,7 @@ void get_batv() {
 
     unsigned char check;
     //start adc
-    if(charge_complate == 1){
+    if(charge_complate == 1) {
     	reg_batv = 0x3F;
     	return;
     }
@@ -393,6 +398,10 @@ void disable_timer() {
 
 unsigned char get_idx(unsigned short percent, const unsigned short *array) {
 
+	if(charge_complate) {
+		return 5;
+	}
+
     if(percent <= array[0]) {
         return 0;
     } else if(percent <= array[1]) {
@@ -404,7 +413,7 @@ unsigned char get_idx(unsigned short percent, const unsigned short *array) {
     } else if(percent <= array[4]) {
         return 4;
     } else {
-    	return 4;
+    	return 5;
     }
 
 }
@@ -435,11 +444,11 @@ void light_leds(unsigned int mode, unsigned int percent) {
             break;
         case 2:
             led_mode=1;
-            idx=get_idx(percent, charge_th);
+            idx=get_idx(percent, &charge_th[0]);
             break;
         case 3:
             led_mode=1;
-            idx=get_idx(percent, discharge_th);
+            idx=get_idx(percent, &discharge_th[0]);
             break;
         default:
             led_mode=0;
@@ -468,20 +477,20 @@ void light_leds(unsigned int mode, unsigned int percent) {
             b=0x0F;
             break;
         default:
-            a=0x00;
-            b=0x00;
+        	led_mode =0;
+            a=0xFF;
+            b=0xFF;
             break;
     }
 
     if(led_mode) {
         flash^=0x01;
         if(flash)
-            P2OUT = (P2OUT&(~0x0F))|a;
+            P2OUT = ((P2OUT&(~0x0F))|a);
         else
-            P2OUT = (P2OUT&(~0x0F))|b;
-
+            P2OUT = ((P2OUT&(~0x0F))|b);
     } else {
-        P2OUT = (P2OUT&(~0x0F))|b;
+        P2OUT = ((P2OUT&(~0x0F))|b);
     }
 }
 
@@ -605,7 +614,6 @@ int main(void)
         }
 
         //mode, votg
-        charge_complate=0;
         read_bq2589x(0x0B, &reg_stat);
         if((reg_stat&0x18) == 0x18) {
         	charge_complate=1;
@@ -642,6 +650,7 @@ int main(void)
             	button_count=0;
             	mode1_count=0;
             	mode23_count=0;
+            	charge_complate=0;
             	reset_avg_sample();
                 disable_timer();
                 P2OUT &= ~0x0F;
@@ -655,6 +664,7 @@ int main(void)
             case 1:
             	button_count=0;
             	mode23_count=0;
+            	charge_complate=0;
             	reset_avg_sample();
                 if(mode1_count == 0) {
                     //enble batfet if need
