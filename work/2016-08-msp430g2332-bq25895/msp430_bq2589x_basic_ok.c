@@ -26,7 +26,7 @@ unsigned short mode23_count=0;
 unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
 #ifdef BAT_LOW_VERSION
-//const 							 close 1led  2led  3led  4leds
+//const 							 close 1led  2led  3led  4leds   always on
 const unsigned short idle_th[] = 		{3600, 3750, 3850, 3980, 4100};
 const unsigned short charge_th[] = 		{3600, 3750, 3850, 3980, 4100};
 const unsigned short discharge_th[] = 	{3600, 3750, 3850, 3980, 4100};
@@ -528,7 +528,7 @@ void init_bq2589x() {
 
     unsigned char v;
 
-    write_bq2589x(0x06, 0x12);//Ipre and Iterm:128mA
+    write_bq2589x(0x05, 0x12);//Ipre and Iterm:128mA
 
     read_bq2589x(0x06, &v);
     write_bq2589x(0x06, (v&0x03)|(0x80));//voltage limit 4.352V = 3.840 + 0.512
