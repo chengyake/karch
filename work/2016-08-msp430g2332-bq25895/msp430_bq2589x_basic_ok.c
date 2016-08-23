@@ -27,13 +27,13 @@ unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
 #ifdef BAT_LOW_VERSION
 //const 							 close 1led  2led  3led  4leds   always on
-const unsigned short idle_th[] = 		{3600, 3750, 3850, 3980, 4100};
-const unsigned short charge_th[] = 		{3600, 3750, 3850, 3980, 4100};
-const unsigned short discharge_th[] = 	{3600, 3750, 3850, 3980, 4100};
+const unsigned short idle_th[] = 		{3650, 3750, 3850, 3980, 4110};
+const unsigned short charge_th[] = 		{3650, 3750, 3850, 3980, 4110};
+const unsigned short discharge_th[] = 	{3500, 3750, 3850, 3980, 4110};
 #else
-const unsigned short idle_th[] = 		{3600, 3800, 3950, 4100, 4240};
-const unsigned short charge_th[] = 		{3600, 3800, 3950, 4100, 4240};
-const unsigned short discharge_th[] = 	{3600, 3800, 3950, 4100, 4240};
+const unsigned short idle_th[] = 		{3650, 3800, 3950, 4100, 4240};
+const unsigned short charge_th[] = 		{3650, 3800, 3950, 4100, 4240};
+const unsigned short discharge_th[] = 	{3500, 3800, 3950, 4100, 4240};
 #endif
 //just for i2c
 unsigned char reg, value_w, *value_r;      		// Variable for transmitted data
@@ -61,11 +61,9 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
     //min 3.6 max 4.2
-    if((P1IN&0x04) == 0) {
-        button = 1;
-        P1IFG &= ~0x04;                           // P1.2 IFG cleared
-        LPM0_EXIT;
-    }
+    button = 1;
+    P1IFG &= ~0x04;                           // P1.2 IFG cleared
+    LPM0_EXIT;
 }
 
 // Port 2 interrupt service routine
@@ -504,13 +502,13 @@ unsigned short get_and_update_avg_sample(unsigned short voltage) {
 	unsigned char num=0;
 	unsigned int sum=0;
 	for(i=0; i<SAMPLE_AVG_NUM; i++) {
-		if(avg_sample[i] > 2500) {
+		if(avg_sample[i] > 3000) {
 			sum+=avg_sample[i];
 			num++;
 		}
 	}
 
-	if(voltage > 2500) {
+	if(voltage > 3000) {
 		sum+=voltage;
 		num++;
 		for(i=0; i<SAMPLE_AVG_NUM-1; i++) {
@@ -709,9 +707,8 @@ int main(void)
                 break;
 
             case 3:
-            	votg=1;
             	if(batfet == 0) enable_batfet();
-                P1OUT |= 0x08;
+
                 enable_timer();
                 mode23_count++;
                 if(mode23_count>=20*60) {
@@ -721,7 +718,16 @@ int main(void)
                     write_bq2589x(0x03, v|0x10);
                     mode23_count=0;
                 }
-                light_leds(mode, get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304));
+                unsigned int voltage = get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304);
+                if(voltage > discharge_th[0]) {
+                	votg=1;
+                	P1OUT |= 0x08;
+                	light_leds(mode, voltage);
+                } else {
+                	votg=1;
+                	P1OUT &= (~0x08);
+                	light_leds(2, voltage);
+                }
 
                 break;
         }
@@ -730,4 +736,3 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-
