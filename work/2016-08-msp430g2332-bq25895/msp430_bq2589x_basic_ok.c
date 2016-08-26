@@ -5,7 +5,7 @@
 #define	LONG_PRESS_TIME	(30)
 #define SAMPLE_AVG_NUM	(10)
 #define BAT_LOW_VERSION
-#define LS_DEBUG
+//#define LS_DEBUG
 
 #define SLAVE_ADDR	(0xD4)	//0x6A
 
@@ -27,13 +27,13 @@ unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
 #ifdef BAT_LOW_VERSION
 //const 							 close 1led  2led  3led  4leds   always on
-const unsigned short idle_th[] = 		{3650, 3750, 3850, 3980, 4110};
-const unsigned short charge_th[] = 		{3650, 3750, 3850, 3980, 4110};
-const unsigned short discharge_th[] = 	{3500, 3750, 3850, 3980, 4110};
+const unsigned short idle_th[] = 		{3670, 3770, 3860, 3980, 4110};
+const unsigned short charge_th[] = 		{3700, 3800, 3860, 3980, 4110};
+const unsigned short discharge_th[] = 	{3520, 3700, 3810, 3940, 4110};
 #else
 const unsigned short idle_th[] = 		{3650, 3800, 3950, 4100, 4240};
 const unsigned short charge_th[] = 		{3650, 3800, 3950, 4100, 4240};
-const unsigned short discharge_th[] = 	{3500, 3800, 3950, 4100, 4240};
+const unsigned short discharge_th[] = 	{3520, 3650, 3880, 4000, 4240};
 #endif
 //just for i2c
 unsigned char reg, value_w, *value_r;      		// Variable for transmitted data
@@ -61,8 +61,9 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
     //min 3.6 max 4.2
-    button = 1;
     P1IFG &= ~0x04;                           // P1.2 IFG cleared
+    P1IE &= ~0x04;                             // P1.2 interrupt enabled
+    button = 1;
     LPM0_EXIT;
 }
 
@@ -508,7 +509,7 @@ unsigned short get_and_update_avg_sample(unsigned short voltage) {
 		}
 	}
 
-	if(voltage > 3000) {
+	if(voltage > 3000 && voltage != avg_sample[SAMPLE_AVG_NUM-1]) {
 		sum+=voltage;
 		num++;
 		for(i=0; i<SAMPLE_AVG_NUM-1; i++) {
@@ -616,14 +617,17 @@ int main(void)
         if((reg_stat&0x18) == 0x18) {
         	charge_complate=1;
         }
-        if((reg_stat&0x04) == 0x04) { 			//power good
+        if((reg_stat&0x0E4) != 0x00) { 			//power good
             button=0;//useless
             if(mode < 2) mode = 2;
             if((reg_stat&0xE0) == 0x20) {       //usb pc
                 if(button_count == LONG_PRESS_TIME) {
                     votg^=0x01;
                     if(votg) {
-                    	mode = 3;
+                        if(mode==2 &&
+                           get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304) > charge_th[0]) {
+                        	mode = 3;
+                        }
                     } else {
                     	mode = 2;
                     }
@@ -635,11 +639,11 @@ int main(void)
         } else {								//no power
             votg = 0;
             if(button == 1 || mode == 1) {
-                button=0;
                 mode = 1;
             } else {
                 mode = 0;
             }
+            button=0;
         }
 
 
@@ -708,7 +712,8 @@ int main(void)
 
             case 3:
             	if(batfet == 0) enable_batfet();
-
+            	votg=1;
+            	P1OUT |= 0x08;
                 enable_timer();
                 mode23_count++;
                 if(mode23_count>=20*60) {
@@ -718,21 +723,11 @@ int main(void)
                     write_bq2589x(0x03, v|0x10);
                     mode23_count=0;
                 }
-                unsigned int voltage = get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304);
-                if(voltage > discharge_th[0]) {
-                	votg=1;
-                	P1OUT |= 0x08;
-                	light_leds(mode, voltage);
-                } else {
-                	votg=1;
-                	P1OUT &= (~0x08);
-                	light_leds(2, voltage);
-                }
-
+                light_leds(mode, get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304));
                 break;
         }
 
-
+        P1IE |= 0x04;                             // P1.2 interrupt enabled
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
