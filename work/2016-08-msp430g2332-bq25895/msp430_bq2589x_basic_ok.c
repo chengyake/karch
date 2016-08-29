@@ -61,8 +61,8 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
     //min 3.6 max 4.2
+    P1IE &= ~0x04;                             // P1.2 interrupt disabled
     P1IFG &= ~0x04;                           // P1.2 IFG cleared
-    P1IE &= ~0x04;                             // P1.2 interrupt enabled
     button = 1;
     LPM0_EXIT;
 }
@@ -126,32 +126,29 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 {
     switch(I2C_State) {
         case 0: // Generate Start Condition & send address to slave
-            Success++;
             USISRL = 0x00;                // Generate Start Condition...
             USICTL0 |= USIGE+USIOE;
             USICTL0 &= ~USIGE;
 
             USISRL = SLAVE_ADDR;
 
-
             I2C_State = 1;                // next state: rcv address (N)Ack
             USICNT = (USICNT & 0xE0) + 0x08; // Bit counter = 8, TX Address
             break;
 
         case 1: // Receive Address Ack/Nack bit
-            Success++;
             I2C_State = 2;                // Go to next state: check (N)Ack
             USICTL0 &= ~USIOE;            // SDA = input
             USICNT |= 0x01;               // Bit counter=1, receive (N)Ack bit
             break;
 
         case 2: // Process Address Ack/Nack & handle reg TX
-            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
                 I2C_State = 7;
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
+                Success=1;
             } else { // Ack received, TX data to slave...
                 USISRL = reg;          		// Load data byte
                 I2C_State = 3;
@@ -160,7 +157,6 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
             break;
 
         case 3: //Get reg Ack/Nack bit
-            Success++;
             if(Transmit == 1) {
                 I2C_State = 4;               // Go to next state: check (N)Ack
             } else {
@@ -171,12 +167,12 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
             break;
 
         case 4: // Process Address Ack/Nack & handle data TX
-            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
                 I2C_State = 7;               // Go to next state: check (N)Ack
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
+                Success=1;
             } else { 	// Ack received, TX data to slave...
                 USISRL = value_w;            // Load data byte
                 I2C_State = 5;               // Go to next state: check (N)Ack
@@ -186,14 +182,12 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 5: // Get Ack/Nack bit
-            Success++;
             I2C_State = 6;                // Go to next state: check (N)Ack
             USICTL0 &= ~USIOE;            // SDA = input
             USICNT |= 0x01;               // Bit counter=1, receive (N)Ack bit
             break;
 
         case 6: // Check ACK and Prep Stop Condition
-            Success++;
             USICTL0 |= USIOE;             // SDA = output
             USISRL = 0x00;
             USICNT |=  0x01;              // Bit counter= 1, SCL high, SDA low
@@ -202,22 +196,22 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 7:// Generate Stop Condition
-            Success++;
             USISRL = 0x0FF;               // USISRL = 1 to release SDA
             USICTL0 |= USIGE;             // Transparent latch enabled
             USICTL0 &= ~(USIGE+USIOE);    // Latch/SDA output disabled
             I2C_State = 0;                // Reset state machine for next xmt
+            Success++;
             LPM0_EXIT;                    // Exit active for next transfer
             break;
 
 
         case 8:
-            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
                 I2C_State = 7;               // Go to next state: check (N)Ack
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
+                Success=1;
                 break;
             }
 
@@ -229,7 +223,6 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 9: // Generate Start Condition & send address to slave
-            Success++;
             USISRL = 0x00;                // Generate Start Condition...
             USICTL0 |= USIGE+USIOE;
             USICTL0 &= ~USIGE;
@@ -242,19 +235,18 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 10: // Receive Address Ack/Nack bit
-            Success++;
             I2C_State = 11;                // Go to next state: check (N)Ack
             USICTL0 &= ~USIOE;            // SDA = input
             USICNT |= 0x01;               // Bit counter=1, receive (N)Ack bit
             break;
 
         case 11: // Process Address Ack/Nack & handle data Rx
-            Success++;
             USICTL0 |= USIOE;             // SDA = output
             if (USISRL & 0x01) {            // If Nack received...  Send stop...
                 USISRL = 0x00;
                 I2C_State = 7;               // Go to next state: check (N)Ack
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
+                Success=1;
             } else { 	// Ack received, RX data from slave...
                 USICTL0 &= ~USIOE;                  // SDA = input --> redundant
                 I2C_State = 12;                      // Next state: Test data and (N)Ack
@@ -264,7 +256,6 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
 
 
         case 12: // Send Data Ack/Nack bit
-            Success++;
             *value_r = USISRL;             //get value from register
 
             USICTL0 |= USIOE;             // SDA = output
@@ -315,10 +306,12 @@ unsigned char write_bq2589x(unsigned char r, unsigned char v) {
     Success = 0;
     Setup_USI_Master_TX();
     USICTL1 |= USIIFG;                      // Set flag and start communication
-    LPM0;                                   // CPU off, await USI interrupt
-    if(Success == 8)
-        return 0;
-    return 1;
+    while(Success==0) LPM0;                                     // CPU off, await USI interrupt
+
+    if(Success != 1) {
+        return 1;
+    }
+    return 0;
 }
 
 unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
@@ -327,10 +320,11 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
     Success = 0;
     Setup_USI_Master_RX();
     USICTL1 |= USIIFG;                        // Set flag and start communication
-    LPM0;                                     // CPU off, await USI interrupt
-    if(Success == 11)
-        return 0;
-    return 1;
+    while(Success==0) LPM0;                                     // CPU off, await USI interrupt
+
+    if(Success != 1)
+        return 1;
+    return 0;
 }
 
 
@@ -527,7 +521,7 @@ void init_bq2589x() {
 
     unsigned char v;
 
-    write_bq2589x(0x05, 0x12);//Ipre and Iterm:128mA
+    write_bq2589x(0x05, 0x12);           //Ipre and Iterm:128mA
 
     read_bq2589x(0x06, &v);
     write_bq2589x(0x06, (v&0x03)|(0x80));//voltage limit 4.352V = 3.840 + 0.512
@@ -543,6 +537,9 @@ void init_bq2589x() {
     //thermal threshold 60`;
     read_bq2589x(0x08, &v);
     write_bq2589x(0x08, v&(~0x03));
+
+
+    write_bq2589x(0x0D, 0x80);		      //some how?? 0xFF
 
 }
 
@@ -605,6 +602,12 @@ int main(void)
 
 
         unsigned char reg_stat, reg_fault;
+
+
+        P1IE &= ~0x04;                            // Button P1.2 interrupt disabled
+        P1IFG &= ~0x04;                           // P1.2 IFG cleared
+
+        write_bq2589x(0x0D, 0x80);				  //some how?? 0xFF
 
         //error handle
         read_bq2589x(0x0C, &reg_fault);
@@ -731,3 +734,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
+//edit at 2016/08/29 15:34
