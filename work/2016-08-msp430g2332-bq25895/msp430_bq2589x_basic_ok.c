@@ -523,8 +523,11 @@ void init_bq2589x() {
 
     write_bq2589x(0x05, 0x12);           //Ipre and Iterm:128mA
 
-    read_bq2589x(0x06, &v);
-    write_bq2589x(0x06, (v&0x03)|(0x80));//voltage limit 4.352V = 3.840 + 0.512
+#ifndef BAT_LOW_VERSION
+    write_bq2589x(0x06, 0x82);//voltage limit 4.352V = 3.840 + 0.512
+#else
+    write_bq2589x(0x06, 0x5E);//voltage limit 4.208V by default
+#endif
 
     //disable wdog and stat pin
     read_bq2589x(0x07, &v);
@@ -734,4 +737,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/08/29 15:58
+//edit at 2016/08/29 16:38
