@@ -330,7 +330,7 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
 
 void get_batv() {
 
-    unsigned char check;
+    unsigned char check,j;
     //start adc
     if(charge_complate == 1) {
     	reg_batv = 0x3F;
@@ -339,7 +339,7 @@ void get_batv() {
     for(i=5; i>0; i--) {
         read_bq2589x(0x02, &check);
         write_bq2589x(0x02, check|0x80);
-        for(i=1000; i>0; i--) {
+        for(j=5; j>0; j--) {
             __delay_cycles(10000);
             read_bq2589x(0x02, &check);
             if((check&0x80) == 0) {
@@ -703,7 +703,7 @@ int main(void)
                 P1OUT &= (~0x08);
                 enable_timer();
                 mode23_count++;
-                if(mode23_count>=20*60) {
+                if(mode23_count>=20*15) {
                     read_bq2589x(0x03, &v);
                     write_bq2589x(0x03, v&(~0x10));
                     get_batv();
@@ -719,7 +719,7 @@ int main(void)
             	P1OUT |= 0x08;
                 enable_timer();
                 mode23_count++;
-                if(mode23_count>=20*60) {
+                if(mode23_count>=20*15) {
                     read_bq2589x(0x03, &v);
                     write_bq2589x(0x03, v&(~0x10));
                     get_batv();
@@ -734,4 +734,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/08/29 15:34
+//edit at 2016/08/29 15:58
