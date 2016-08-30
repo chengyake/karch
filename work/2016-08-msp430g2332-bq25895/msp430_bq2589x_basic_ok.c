@@ -27,9 +27,9 @@ unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
 #ifdef BAT_LOW_VERSION
 //const 							 close 1led  2led  3led  4leds   always on
-const unsigned short idle_th[] = 		{3670, 3770, 3860, 3980, 4110};
-const unsigned short charge_th[] = 		{3700, 3800, 3860, 3980, 4110};
-const unsigned short discharge_th[] = 	{3520, 3700, 3810, 3940, 4110};
+const unsigned short idle_th[] = 		{3670, 3710, 3800, 3940, 4110};
+const unsigned short charge_th[] = 		{3700, 3760, 3810, 3950, 4120};
+const unsigned short discharge_th[] = 	{3520, 3640, 3750, 3900, 4110};
 #else
 const unsigned short idle_th[] = 		{3650, 3800, 3950, 4100, 4240};
 const unsigned short charge_th[] = 		{3650, 3800, 3950, 4100, 4240};
@@ -399,6 +399,7 @@ unsigned char get_idx(unsigned short percent, const unsigned short *array) {
 		return 5;
 	}
 
+
     if(percent <= array[0]) {
         return 0;
     } else if(percent <= array[1]) {
@@ -417,10 +418,10 @@ unsigned char get_idx(unsigned short percent, const unsigned short *array) {
 
 
 /*
- *  mode 0:all on, 1:latest flash
+ *  led-mode 0:all on, 1:latest flash
  *
  */
-void light_leds(unsigned int mode, unsigned int percent) {
+void light_leds(unsigned int mode, unsigned short percent) {
 
     static unsigned char flash=0;
     unsigned char a,b, idx, led_mode;
@@ -630,7 +631,7 @@ int main(void)
         if((reg_stat&0x0E4) != 0x00) { 			//power good
             button=0;//useless
             if(mode < 2) mode = 2;
-            if((reg_stat&0xE0) == 0x20) {       //usb pc
+            if((reg_stat&0xE0) == 0x20 || (reg_stat&0xE0) == 0x40) {       //usb pc
                 if(button_count == LONG_PRESS_TIME) {
                     votg^=0x01;
                     if(votg) {
@@ -741,4 +742,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/08/29 18:18
+//edit at 2016/08/30 17:28
