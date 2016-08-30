@@ -148,7 +148,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
                 USISRL = 0x00;
                 I2C_State = 7;
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
-                Success=1;
+                Success=2;
             } else { // Ack received, TX data to slave...
                 USISRL = reg;          		// Load data byte
                 I2C_State = 3;
@@ -172,7 +172,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
                 USISRL = 0x00;
                 I2C_State = 7;               // Go to next state: check (N)Ack
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
-                Success=1;
+                Success=2;
             } else { 	// Ack received, TX data to slave...
                 USISRL = value_w;            // Load data byte
                 I2C_State = 5;               // Go to next state: check (N)Ack
@@ -201,7 +201,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
             USICTL0 &= ~(USIGE+USIOE);    // Latch/SDA output disabled
             I2C_State = 0;                // Reset state machine for next xmt
             Success++;
-            LPM0_EXIT;                    // Exit active for next transfer
+            //LPM0_EXIT;                    // Exit active for next transfer
             break;
 
 
@@ -211,7 +211,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
                 USISRL = 0x00;
                 I2C_State = 7;               // Go to next state: check (N)Ack
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
-                Success=1;
+                Success=2;
                 break;
             }
 
@@ -246,7 +246,7 @@ void __attribute__ ((interrupt(USI_VECTOR))) USI_TXRX (void)
                 USISRL = 0x00;
                 I2C_State = 7;               // Go to next state: check (N)Ack
                 USICNT |=  0x01;            // Bit counter=1, SCL high, SDA low
-                Success=1;
+                Success=2;
             } else { 	// Ack received, RX data from slave...
                 USICTL0 &= ~USIOE;                  // SDA = input --> redundant
                 I2C_State = 12;                      // Next state: Test data and (N)Ack
@@ -300,31 +300,35 @@ void Setup_USI_Master_RX ()
 }
 
 unsigned char write_bq2589x(unsigned char r, unsigned char v) {
-
+	unsigned char j;
     reg = r;
     value_w = v;
     Success = 0;
     Setup_USI_Master_TX();
     USICTL1 |= USIIFG;                      // Set flag and start communication
-    while(Success==0) LPM0;                                     // CPU off, await USI interrupt
 
-    if(Success != 1) {
-        return 1;
+    for(j=6; j>0; j--) {
+    	__delay_cycles(1000);
+    	if(Success==1) return 0;
     }
-    return 0;
+    __delay_cycles(20000);
+    return 1;
 }
 
 unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
+	unsigned char j;
     reg = r;
     value_r = v;
     Success = 0;
     Setup_USI_Master_RX();
     USICTL1 |= USIIFG;                        // Set flag and start communication
-    while(Success==0) LPM0;                                     // CPU off, await USI interrupt
 
-    if(Success != 1)
-        return 1;
-    return 0;
+    for(j=6; j>0; j--) {
+    	__delay_cycles(10000);
+    	if(Success==1) return 0;
+    }
+    __delay_cycles(20000);
+    return 1;
 }
 
 
@@ -737,4 +741,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/08/29 16:38
+//edit at 2016/08/29 18:18
