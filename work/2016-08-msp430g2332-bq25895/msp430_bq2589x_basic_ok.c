@@ -27,9 +27,9 @@ unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
 
 #ifdef BAT_LOW_VERSION
 //const 							 close 1led  2led  3led  4leds   always on
-const unsigned short idle_th[] = 		{3670, 3710, 3800, 3940, 4110};
-const unsigned short charge_th[] = 		{3700, 3760, 3810, 3950, 4120};
-const unsigned short discharge_th[] = 	{3520, 3640, 3750, 3900, 4110};
+const unsigned short idle_th[] = 		{3650, 3700, 3800, 3950, 4110};
+const unsigned short charge_th[] = 		{3650, 3700, 3800, 3950, 4110};
+const unsigned short discharge_th[] = 	{3530, 3660, 3740, 3900, 4110};
 #else
 const unsigned short idle_th[] = 		{3650, 3800, 3950, 4100, 4240};
 const unsigned short charge_th[] = 		{3650, 3800, 3950, 4100, 4240};
@@ -337,7 +337,7 @@ void get_batv() {
     unsigned char check,j;
     //start adc
     if(charge_complate == 1) {
-        reg_batv = 0x3F;
+        reg_batv = 0x5F;
         return;
     }
     for(i=5; i>0; i--) {
@@ -628,7 +628,7 @@ int main(void)
         if((reg_stat&0x18) == 0x18) {
             charge_complate=1;
         }
-        if((reg_stat&0x0E4) != 0x00) { 			//power good
+        if((reg_stat&0x0E4) != 0x00) { 									   //power good
             button=0;//useless
             if(mode < 2) mode = 2;
             if((reg_stat&0xE0) == 0x20 || (reg_stat&0xE0) == 0x40) {       //usb pc
@@ -640,7 +640,7 @@ int main(void)
                     if(mode==2 &&  t> charge_th[0]) {
                         mode = 3;
                     }
-                    if(mode==3 && t < charge_th[0]) {
+                    if(mode==3 && t < discharge_th[0]) {
                         votg=0;
                         mode=2;
                     }
