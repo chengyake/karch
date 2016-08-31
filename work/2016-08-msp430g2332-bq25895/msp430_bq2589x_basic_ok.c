@@ -97,13 +97,13 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
         mode23_count=0;
         button_count=0;
     } else if(mode != 0) {
-    	if((P1IN&0x04) == 0) {
-    		button_count++;
-    	} else {
-    		button_count=0;
-    	}
-    	mode23_count++;
-    	mode1_count=0;
+        if((P1IN&0x04) == 0) {
+            button_count++;
+        } else {
+            button_count=0;
+        }
+        mode23_count++;
+        mode1_count=0;
     }
 
     CCR0 += 50000;                              // Add Offset to CCR0
@@ -300,7 +300,7 @@ void Setup_USI_Master_RX ()
 }
 
 unsigned char write_bq2589x(unsigned char r, unsigned char v) {
-	unsigned char j;
+    unsigned char j;
     reg = r;
     value_w = v;
     Success = 0;
@@ -308,15 +308,15 @@ unsigned char write_bq2589x(unsigned char r, unsigned char v) {
     USICTL1 |= USIIFG;                      // Set flag and start communication
 
     for(j=6; j>0; j--) {
-    	__delay_cycles(1000);
-    	if(Success==1) return 0;
+        __delay_cycles(1000);
+        if(Success==1) return 0;
     }
     __delay_cycles(20000);
     return 1;
 }
 
 unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
-	unsigned char j;
+    unsigned char j;
     reg = r;
     value_r = v;
     Success = 0;
@@ -324,8 +324,8 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
     USICTL1 |= USIIFG;                        // Set flag and start communication
 
     for(j=6; j>0; j--) {
-    	__delay_cycles(10000);
-    	if(Success==1) return 0;
+        __delay_cycles(10000);
+        if(Success==1) return 0;
     }
     __delay_cycles(20000);
     return 1;
@@ -337,8 +337,8 @@ void get_batv() {
     unsigned char check,j;
     //start adc
     if(charge_complate == 1) {
-    	reg_batv = 0x3F;
-    	return;
+        reg_batv = 0x3F;
+        return;
     }
     for(i=5; i>0; i--) {
         read_bq2589x(0x02, &check);
@@ -395,9 +395,9 @@ void disable_timer() {
 
 unsigned char get_idx(unsigned short percent, const unsigned short *array) {
 
-	if(charge_complate) {
-		return 5;
-	}
+    if(charge_complate) {
+        return 5;
+    }
 
 
     if(percent <= array[0]) {
@@ -411,7 +411,7 @@ unsigned char get_idx(unsigned short percent, const unsigned short *array) {
     } else if(percent <= array[4]) {
         return 4;
     } else {
-    	return 5;
+        return 5;
     }
 
 }
@@ -427,8 +427,8 @@ void light_leds(unsigned int mode, unsigned short percent) {
     unsigned char a,b, idx, led_mode;
 
     if(mode > 1 && charge_complate == 1) {
-    	P2OUT|=0x0F;
-    	return;
+        P2OUT|=0x0F;
+        return;
     }
     switch (mode) {
 
@@ -475,7 +475,7 @@ void light_leds(unsigned int mode, unsigned short percent) {
             b=0x0F;
             break;
         default:
-        	led_mode =0;
+            led_mode =0;
             a=0xFF;
             b=0xFF;
             break;
@@ -493,30 +493,30 @@ void light_leds(unsigned int mode, unsigned short percent) {
 }
 
 void reset_avg_sample() {
-	for(i=0; i<SAMPLE_AVG_NUM; i++) {
-		avg_sample[i]=0;
-	}
+    for(i=0; i<SAMPLE_AVG_NUM; i++) {
+        avg_sample[i]=0;
+    }
 }
 
 unsigned short get_and_update_avg_sample(unsigned short voltage) {
-	unsigned char num=0;
-	unsigned int sum=0;
-	for(i=0; i<SAMPLE_AVG_NUM; i++) {
-		if(avg_sample[i] > 3000) {
-			sum+=avg_sample[i];
-			num++;
-		}
-	}
+    unsigned char num=0;
+    unsigned int sum=0;
+    for(i=0; i<SAMPLE_AVG_NUM; i++) {
+        if(avg_sample[i] > 3000) {
+            sum+=avg_sample[i];
+            num++;
+        }
+    }
 
-	if(voltage > 3000 && voltage != avg_sample[SAMPLE_AVG_NUM-1]) {
-		sum+=voltage;
-		num++;
-		for(i=0; i<SAMPLE_AVG_NUM-1; i++) {
-			avg_sample[i]=avg_sample[i+1];
-		}
-		avg_sample[SAMPLE_AVG_NUM-1]=voltage;
-	}
-	return sum/num;
+    if(voltage > 3000 && voltage != avg_sample[SAMPLE_AVG_NUM-1]) {
+        sum+=voltage;
+        num++;
+        for(i=0; i<SAMPLE_AVG_NUM-1; i++) {
+            avg_sample[i]=avg_sample[i+1];
+        }
+        avg_sample[SAMPLE_AVG_NUM-1]=voltage;
+    }
+    return sum/num;
 
 
 }
@@ -626,7 +626,7 @@ int main(void)
         //mode, votg
         read_bq2589x(0x0B, &reg_stat);
         if((reg_stat&0x18) == 0x18) {
-        	charge_complate=1;
+            charge_complate=1;
         }
         if((reg_stat&0x0E4) != 0x00) { 			//power good
             button=0;//useless
@@ -634,14 +634,18 @@ int main(void)
             if((reg_stat&0xE0) == 0x20 || (reg_stat&0xE0) == 0x40) {       //usb pc
                 if(button_count == LONG_PRESS_TIME) {
                     votg^=0x01;
-                    if(votg) {
-                        if(mode==2 &&
-                           get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304) > charge_th[0]) {
-                        	mode = 3;
-                        }
-                    } else {
-                    	mode = 2;
+                }
+                if(votg) {
+                    unsigned short t = get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304);
+                    if(mode==2 &&  t> charge_th[0]) {
+                        mode = 3;
                     }
+                    if(mode==3 && t < charge_th[0]) {
+                        votg=0;
+                        mode=2;
+                    }
+                } else {
+                    mode = 2;
                 }
             } else {                            //adapter
                 votg = 0;
@@ -660,11 +664,11 @@ int main(void)
 
         switch (mode) {
             case 0:
-            	button_count=0;
-            	mode1_count=0;
-            	mode23_count=0;
-            	charge_complate=0;
-            	reset_avg_sample();
+                button_count=0;
+                mode1_count=0;
+                mode23_count=0;
+                charge_complate=0;
+                reset_avg_sample();
                 disable_timer();
                 P2OUT &= ~0x0F;
                 P1OUT &= (~0x08);
@@ -675,10 +679,11 @@ int main(void)
                 break;
 
             case 1:
-            	button_count=0;
-            	mode23_count=0;
-            	charge_complate=0;
-            	reset_avg_sample();
+                button_count=0;
+                mode23_count=0;
+                charge_complate=0;
+                P1OUT &= (~0x08);
+                reset_avg_sample();
                 if(mode1_count == 0) {
                     //enble batfet if need
                     if(batfet == 0) {
@@ -689,7 +694,6 @@ int main(void)
                     mode1_count++;
                     enable_timer();
                 } else if(mode1_count > 0 && mode1_count < LED_ON_TIME) {
-                    P1OUT &= (~0x08);
                     if(batfet) disable_batfet();
                     mode1_count++;
                     enable_timer();
@@ -697,7 +701,6 @@ int main(void)
                     mode1_count=0;
                     disable_timer();
                     P2OUT &= ~0x0F;
-                    P1OUT &= (~0x08);
                     if(batfet) {
                         disable_batfet();
                     }
@@ -707,7 +710,7 @@ int main(void)
                 break;
 
             case 2:
-            	votg=0;
+                votg=0;
                 P1OUT &= (~0x08);
                 enable_timer();
                 mode23_count++;
@@ -722,9 +725,9 @@ int main(void)
                 break;
 
             case 3:
-            	if(batfet == 0) enable_batfet();
-            	votg=1;
-            	P1OUT |= 0x08;
+                if(batfet == 0) enable_batfet();
+                votg=1;
+                P1OUT |= 0x08;
                 enable_timer();
                 mode23_count++;
                 if(mode23_count>=20*15) {
@@ -742,4 +745,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/08/30 17:28
+//edit at 2016/08/31 11:20
