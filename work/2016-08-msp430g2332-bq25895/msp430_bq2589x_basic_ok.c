@@ -3,7 +3,7 @@
 //50ms/per
 #define	LED_ON_TIME	(20)
 #define	LONG_PRESS_TIME	(30)
-#define SAMPLE_AVG_NUM	(10)
+#define SAMPLE_AVG_NUM	(5)
 #define BAT_LOW_VERSION
 //#define LS_DEBUG
 
