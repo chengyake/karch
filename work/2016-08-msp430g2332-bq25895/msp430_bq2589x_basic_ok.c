@@ -516,6 +516,7 @@ unsigned short get_and_update_avg_sample(unsigned short voltage) {
         }
         avg_sample[SAMPLE_AVG_NUM-1]=voltage;
     }
+    if(num==0) return num;
     return sum/num;
 
 
