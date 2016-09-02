@@ -25,6 +25,9 @@ unsigned char mode=0, reg_batv=0, batfet=0, votg=0, charge_complate=0;
 unsigned char button=0, button_count=0, mode1_count=0;
 unsigned short mode23_count=0;
 unsigned short avg_sample[SAMPLE_AVG_NUM]={0};
+#ifdef LS_DEBUG_LED
+unsigned char fault_flag=0;
+#endif
 
 #ifdef BAT_LOW_VERSION
 //const 							 close 1led  2led  3led  4leds   always on
@@ -427,6 +430,22 @@ void light_leds(unsigned int mode, unsigned short percent) {
     static unsigned char flash=0;
     unsigned char a,b, idx, led_mode;
 
+#ifdef LS_DEBUG_LED
+	if(fault_flag!=0){
+		P2OUT&(~0x0F);
+		if((fault_flag&0x07)==0x01) P2OUT|=0x08;
+		if((fault_flag&0x07)==0x02) P2OUT|=0x01;
+		if((fault_flag&0x08)==0x08) P2OUT|=0x09;
+		if((fault_flag&0x30)==0x10) P2OUT|=0x02;
+		if((fault_flag&0x30)==0x20) P2OUT|=0x0A;
+		if((fault_flag&0x30)==0x30) P2OUT|=0x03;
+		if((fault_flag&0x40)==0x40) P2OUT|=0x0B;
+		//if((fault_flag&0x80)==0x80) P2OUT|=0x08;
+
+		return;
+	}
+#endif
+
     if(mode > 1 && charge_complate == 1) {
         P2OUT|=0x0F;
         return;
@@ -622,6 +641,9 @@ int main(void)
         //error handle
         read_bq2589x(0x0C, &reg_fault);
         if(reg_fault != 0x00) {
+#ifdef LS_DEBUG_LED
+        	fault_flag=reg_fault;
+#endif
             read_bq2589x(0x0C, &reg_fault);
         }
 
@@ -642,6 +664,9 @@ int main(void)
                 if(votg) {
                     unsigned short t = get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304);
                     if(mode==2 &&  t> charge_th[0]) {
+#ifdef LS_DEBUG_LED
+                    	reg_fault=0;
+#endif
                         mode = 3;
                     }
                     if(mode==3 && t < discharge_th[0]) {
