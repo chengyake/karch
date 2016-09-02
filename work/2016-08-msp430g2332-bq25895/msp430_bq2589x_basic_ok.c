@@ -6,6 +6,7 @@
 #define SAMPLE_AVG_NUM	(5)
 #define BAT_LOW_VERSION
 //#define LS_DEBUG
+//#define LS_DEBUG_LED
 
 #define SLAVE_ADDR	(0xD4)	//0x6A
 
@@ -673,12 +674,11 @@ int main(void)
                 charge_complate=0;
                 reset_avg_sample();
                 disable_timer();
-                P2OUT &= ~0x0F;
                 P1OUT &= (~0x08);
                 if(batfet) {
                     disable_batfet();
                 }
-
+                light_leds(mode, 0);
                 break;
 
             case 1:
@@ -703,7 +703,6 @@ int main(void)
                 } else if(mode1_count >= LED_ON_TIME) {
                     mode1_count=0;
                     disable_timer();
-                    P2OUT &= ~0x0F;
                     if(batfet) {
                         disable_batfet();
                     }
@@ -748,4 +747,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/09/02 14:47
+//edit at 2016/09/01 17:19
