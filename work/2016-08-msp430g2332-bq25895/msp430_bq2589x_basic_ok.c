@@ -628,6 +628,8 @@ int main(void)
         read_bq2589x(0x0B, &reg_stat);
         if((reg_stat&0x18) == 0x18) {
             charge_complate=1;
+        } else {
+        	charge_complate=0;
         }
         if((reg_stat&0x0E4) != 0x00) { 									   //power good
             button=0;//useless
@@ -746,4 +748,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/08/31 11:20
+//edit at 2016/09/02 14:47
