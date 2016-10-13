@@ -431,19 +431,19 @@ void light_leds(unsigned int mode, unsigned short percent) {
     unsigned char a,b, idx, led_mode;
 
 #ifdef LS_DEBUG_LED
-    if(fault_flag!=0 && fault_flag!=0x02) {
-        P2OUT=P2OUT&(~0x0F);
-        if((fault_flag&0x07)==0x01) P2OUT|=0x08;
-        //if((fault_flag&0x07)==0x02) P2OUT|=0x01;
-        if((fault_flag&0x08)==0x08) P2OUT|=0x09;
-        if((fault_flag&0x30)==0x10) P2OUT|=0x02;
-        if((fault_flag&0x30)==0x20) P2OUT|=0x0A;
-        if((fault_flag&0x30)==0x30) P2OUT|=0x03;
-        if((fault_flag&0x40)==0x40) P2OUT|=0x0B;
-        //if((fault_flag&0x80)==0x80) P2OUT|=0x08;
+	if(fault_flag!=0 && fault_flag!=0x02) {
+		P2OUT=P2OUT&(~0x0F);
+		if((fault_flag&0x07)==0x01) P2OUT|=0x08;
+		//if((fault_flag&0x07)==0x02) P2OUT|=0x01;
+		if((fault_flag&0x08)==0x08) P2OUT|=0x09;
+		if((fault_flag&0x30)==0x10) P2OUT|=0x02;
+		if((fault_flag&0x30)==0x20) P2OUT|=0x0A;
+		if((fault_flag&0x30)==0x30) P2OUT|=0x03;
+		if((fault_flag&0x40)==0x40) P2OUT|=0x0B;
+		//if((fault_flag&0x80)==0x80) P2OUT|=0x08;
 
-        return;
-    }
+		return;
+	}
 #endif
 
     if(mode > 1 && charge_complate == 1) {
@@ -642,7 +642,7 @@ int main(void)
         read_bq2589x(0x0C, &reg_fault);
         if(reg_fault != 0x00) {
 #ifdef LS_DEBUG_LED
-            fault_flag=reg_fault;
+        	fault_flag=reg_fault;
 #endif
             read_bq2589x(0x0C, &reg_fault);
         }
@@ -652,7 +652,7 @@ int main(void)
         if((reg_stat&0x18) == 0x18) {
             charge_complate=1;
         } else {
-            charge_complate=0;
+        	charge_complate=0;
         }
         if((reg_stat&0x0E4) != 0x00) { 									   //power good
             button=0;//useless
@@ -665,7 +665,7 @@ int main(void)
                     unsigned short t = get_and_update_avg_sample((reg_batv&0x7F)*20 + 2304);
                     if(mode==2 &&  t> charge_th[0]) {
 #ifdef LS_DEBUG_LED
-                        fault_flag=0;
+                    	fault_flag=0;
 #endif
                         mode = 3;
                     }
@@ -772,4 +772,4 @@ int main(void)
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
-//edit at 2016/09/01 18:44
+//edit at 2016/09/01 17:19
