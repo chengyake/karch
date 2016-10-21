@@ -1,0 +1,39 @@
+
+PRODUCT_COPY_FILES device/odmm/mu1/copyfiles/system/etc/labtool/bt_init_cfg.conf:system/etc/labtool/bt_init_cfg.conf ignored.
+make: Entering directory `/home/chengyake/mu1/source'
+target arm C: libOpencl_MU1 <= external/opencl_neon/opencl_mu1.c
+external/opencl_neon/opencl_mu1.c:1:0: warning: switch -mcpu=cortex-a7 conflicts with -march=armv7-a switch [enabled by default]
+target Executable: libOpencl_MU1 (out/target/product/mu1/obj/EXECUTABLES/libOpencl_MU1_intermediates/LINKED/libOpencl_MU1)
+target Symbolic: libOpencl_MU1 (out/target/product/mu1/symbols/system/bin/libOpencl_MU1)
+Export includes file: external/opencl_neon/Android.mk -- out/target/product/mu1/obj/EXECUTABLES/libOpencl_MU1_intermediates/export_includes
+target Strip: libOpencl_MU1 (out/target/product/mu1/obj/EXECUTABLES/libOpencl_MU1_intermediates/libOpencl_MU1)
+Install: out/target/product/mu1/system/bin/libOpencl_MU1
+make: Leaving directory `/home/chengyake/mu1/source'
+chengyake@server-4:~/mu1/source/external/opencl_neon$ touch *
+chengyake@server-4:~/mu1/source/external/opencl_neon$ mm
+Adding CUSTOM_LOCALES [hdpi mdpi] to PRODUCT_LOCALES [en_US en_IN fr_FR it_IT es_ES et_EE de_DE nl_NL cs_CZ pl_PL ja_JP zh_TW zh_CN zh_HK ru_RU ko_KR nb_NO es_US da_DK el_GR tr_TR pt_PT pt_BR rm_CH sv_SE bg_BG ca_ES en_GB fi_FI hi_IN hr_HR hu_HU in_ID iw_IL lt_LT lv_LV ro_RO sk_SK sl_SI sr_RS uk_UA vi_VN tl_PH ar_EG fa_IR th_TH sw_TZ ms_MY af_ZA zu_ZA am_ET hi_IN en_XA ar_XB fr_CA km_KH lo_LA ne_NP mn_MN hy_AM az_AZ ka_GE es_MX es_CO es_CL]
+============================================
+PLATFORM_VERSION_CODENAME=REL
+PLATFORM_VERSION=4.4.2
+TARGET_PRODUCT=mu1_def
+TARGET_BUILD_VARIANT=eng
+TARGET_BUILD_TYPE=release
+TARGET_BUILD_APPS=
+TARGET_ARCH=arm
+TARGET_ARCH_VARIANT=armv7-a-neon
+TARGET_CPU_VARIANT=cortex-a7
+HOST_ARCH=x86
+HOST_OS=linux
+HOST_OS_EXTRA=Linux-3.16.0-30-generic-x86_64-with-Ubuntu-14.04-trusty
+HOST_BUILD_TYPE=release
+BUILD_ID=KOT49H
+OUT_DIR=out
+============================================
+PRODUCT_COPY_FILES device/odmm/mu1/copyfiles/system/etc/labtool/bt_init_cfg.conf:system/etc/labtool/bt_init_cfg.conf ignored.
+make: Entering directory `/home/chengyake/mu1/source'
+target arm C: libOpencl_MU1 <= external/opencl_neon/opencl_mu1.c
+arm-linux-androideabi-gcc: error: unrecognized argument in option '-mtune=cortex-a7-neon'
+arm-linux-androideabi-gcc: note: valid arguments to '-mtune=' are: arm1020e arm1020t arm1022e arm1026ej-s arm10e arm10tdmi arm1136j-s arm1136jf-s arm1156t2-s arm1156t2f-s arm1176jz-s arm1176jzf-s arm2 arm250 arm3 arm6 arm60 arm600 arm610 arm620 arm7 arm70 arm700 arm700i arm710 arm7100 arm710c arm710t arm720 arm720t arm740t arm7500 arm7500fe arm7d arm7di arm7dm arm7dmi arm7m arm7tdmi arm7tdmi-s arm8 arm810 arm9 arm920 arm920t arm922t arm926ej-s arm940t arm946e-s arm966e-s arm968e-s arm9e arm9tdmi cortex-a15 cortex-a5 cortex-a7 cortex-a8 cortex-a9 cortex-m0 cortex-m1 cortex-m3 cortex-m4 cortex-r4 cortex-r4f cortex-r5 ep9312 fa526 fa606te fa626 fa626te fa726te fmp626 generic-armv7-a iwmmxt iwmmxt2 mpcore mpcorenovfp native strongarm strongarm110 strongarm1100 strongarm1110 xscale
+make: *** [out/target/product/mu1/obj/EXECUTABLES/libOpencl_MU1_intermediates/opencl_mu1.o] Error 1
+make: Leaving directory `/home/chengyake/mu1/source'
+chengyake@server-4:~/mu1/source/external/opencl_neon$ 
