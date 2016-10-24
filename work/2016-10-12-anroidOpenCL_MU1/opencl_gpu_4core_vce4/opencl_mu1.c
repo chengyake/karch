@@ -6,30 +6,25 @@
 #include <linux/types.h>
 #include <fcntl.h>
 #include <utils/Log.h>
+#include <math.h>
 
 #define OPENCL_MU1
 #define MMAP
 
-//#define DEBUG_API_CL
 
 
 #ifdef OPENCL_MU1
-cl_int16 table_i[512][64], table_q[512][64];
-cl_int16 table_o[512][64];
+cl_int4 table_i[512][256], table_q[512][256];
+cl_int4 table_o[512][256];
 #else 
 int table_i[512][1024], table_q[512][1024];
 int table_o[512][1024];
 #endif
 
 
-size_t global_work_size[2] = {512, 64};
-size_t local_work_size[2] = {16, 16};
 
-#ifdef DEBUG_API_CL
-cl_event event = 0;
-cl_ulong start_time=0;
-cl_ulong end_time=0;
-#endif
+size_t global_work_size[2] = {512, 256};
+size_t local_work_size[2] = {16, 16};
 
 
 int ret;
@@ -106,11 +101,8 @@ int32_t init_kernel_platform() {
 	}
 	
 	context = clCreateContext(NULL,1, devices,NULL,NULL,NULL);
-#ifdef DEBUG_API_CL
-	commandQueue = clCreateCommandQueue(context, devices[0], CL_QUEUE_PROFILING_ENABLE, &ret);
-#else
+
 	commandQueue = clCreateCommandQueue(context, devices[0], 0, NULL);
-#endif
     
 	char filename[] = "/data/mu1_kernel.cl";
 	char file_context[10*1024]={0};
@@ -206,29 +198,15 @@ static int32_t set_input_i_to_kernel() {
 
 
 static int32_t run_kernel() {
-#ifdef DEBUG_API_CL
-    size_t info;
-    ret = clEnqueueNDRangeKernel(commandQueue, kernel, 2, NULL, global_work_size, local_work_size, 0, NULL, &event);
-#else
+
     ret = clEnqueueNDRangeKernel(commandQueue, kernel, 2, NULL, global_work_size, local_work_size, 0, NULL, NULL);
     //ret = clEnqueueNDRangeKernel(commandQueue, kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
-#endif
     if(ret < 0) {
         LOGD("MU1 Error: clEnqueueNDRangeKernel error\n");
     }
 
     clFinish(commandQueue);
 
-#ifdef DEBUG_API_CL
-
-    clWaitForEvents(1, &event);
-    cl_int status=1;
-    clGetEventInfo(event, CL_EVENT_COMMAND_EXECUTION_STATUS, 4, &status, NULL);
-    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_QUEUED, sizeof(cl_ulong), &start_time, &info);
-    clGetEventProfilingInfo(event, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &end_time, &info);
-    
-    LOGD("MU1: clGetEventProilingInfo run kernel %f ms, status: %d", (end_time - start_time)*1.0/1000000, status);
-#endif
     return ret;
 
 }
@@ -271,9 +249,9 @@ int init_mu1_opencl() {
     int i,j;
 
 #ifdef OPENCL_MU1
-    cl_int16 a={20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
-    cl_int16 b={10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
-    cl_int16 c={1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    cl_int4 a={20, 20, 20, 20}; //, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20};
+    cl_int4 b={10, 10, 10, 10}; //, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10};
+    cl_int4 c={1, 1, 1, 1}; //, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
 
     ret = init_kernel_platform();
     if(ret < 0) {
@@ -282,18 +260,41 @@ int init_mu1_opencl() {
     }
     
     for(i=0; i<512; i++) {
-        for(j=0; j<64; j++) {
-            memcpy(&table_i[i][j], &a.s0, sizeof(a));
-            memcpy(&table_q[i][j], &b.s0, sizeof(b));
-            memcpy(&table_o[i][j], &c.s0, sizeof(c));
+        for(j=0; j<256; j++) {
+            table_i[i][j].x = 200;  
+            table_q[i][j].x = 200; 
+            table_o[i][j].x = 200; 
+            table_i[i][j].y = 200; 
+            table_q[i][j].y = 200; 
+            table_o[i][j].y = 200; 
+            table_i[i][j].z = 200; 
+            table_q[i][j].z = 200; 
+            table_o[i][j].z = 200; 
+            table_i[i][j].w = 200; 
+            table_q[i][j].w = 200; 
+            table_o[i][j].w = 200;
+            /*
+            table_i[i][j].x = i+j+1;
+            table_q[i][j].x = i*2+j+1;
+            table_o[i][j].x = 1;
+            table_i[i][j].y = i+j+2;
+            table_q[i][j].y = i*2+j+2;
+            table_o[i][j].y = 1;
+            table_i[i][j].z = i+j+3;
+            table_q[i][j].z = i*2+j+3;
+            table_o[i][j].z = 1;
+            table_i[i][j].w = i+j+4;
+            table_q[i][j].w = i*2+j+4;
+            table_o[i][j].w = 1;
+            */
         }
     }
 #else 
     for(i=0; i<512; i++) {
         for(j=0; j<1024; j++) {
-            table_i[i][j] = 20;
-            table_q[i][j] = 10;
-            table_o[i][j] = 1;
+            table_i[i][j] = 200;//i+j+1;
+            table_q[i][j] = 200;//i*2+j+1;
+            table_o[i][j] = 200;//1;
         }
     }
 
@@ -305,15 +306,16 @@ int init_mu1_opencl() {
 void process_cfm_by_gpu(unsigned char *pDataDst, int nDstWidth, int nDstHeight, short *pSrcData, int nSrcWidth, int nSrcHeight) {
 
     int i,j;
+    int m,n;
 
 #ifdef OPENCL_MU1
 
     LOGD("MU1 ---------------------- input start");
     set_input_i_to_kernel();
     set_input_o_to_kernel();
-    //LOGD("MU1 ---------------------- run kernel");
+    LOGD("MU1 ---------------------- run kernel");
     run_kernel();
-    //LOGD("MU1 ---------------------- get output");
+    LOGD("MU1 ---------------------- get output");
     get_output_from_kernel();
     LOGD("MU1 ---------------------- end");
 
@@ -322,8 +324,9 @@ void process_cfm_by_gpu(unsigned char *pDataDst, int nDstWidth, int nDstHeight, 
     LOGD("MU1 ---------------------- start C");
     for(i=0; i<512; i++) {
         for(j=0; j<1024; j++) {
-            table_o[i][j] = (table_i[i][j] + table_q[i][j]) / (table_i[i][j] - table_q[i][j]);
-            table_o[i][j] += (table_i[i][j] + table_q[i][j] - 1) / (table_i[i][j] - table_q[i][j] + 1);
+            table_o[i][j] = (table_i[i][j]+3)*(table_q[i][j]+3)*(table_i[i][j]+2)*(table_q[i][j]+2)*(table_i[i][j]+1)*(table_q[i][j]+1)*(table_i[i][j])*(table_q[i][j])*(table_i[i][j]+3)*(table_q[i][j]+3)*(table_i[i][j]+2)*(table_q[i][j]+2)*(table_i[i][j]+1)*(table_q[i][j]+1)*(table_i[i][j])*(table_q[i][j]);
+            table_o[i][j] +=sin((100.0)/(table_i[i][j]+table_q[i][j]))*1000;
+            table_o[i][j] += sqrt(table_i[i][j]) + sqrt(table_q[i][j]) + sqrt(table_i[i][j]+table_q[i][j]);
         }
     }
     LOGD("MU1 ---------------------- end");
@@ -349,7 +352,7 @@ int main() {
 
     
 #ifdef OPENCL_MU1
-    LOGD("MU1: table_o: %d %d %d\n", table_o[0][0].s0, table_o[17][17].sf, table_o[511][63].s0);
+    LOGD("MU1: table_o: %d %d %d\n", table_o[0][0].s0, table_o[17][17].s2, table_o[511][255].s3);
 #else
     LOGD("MU1: table_o: %d %d %d\n", table_o[0][0], table_o[17][17], table_o[511][1023]);
 #endif

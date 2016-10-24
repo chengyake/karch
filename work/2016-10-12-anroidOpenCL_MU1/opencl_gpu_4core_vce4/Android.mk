@@ -7,7 +7,7 @@ LOCAL_C_INCLUDES := \
         $(LOCAL_PATH)/include
 
 
-LOCAL_SHARED_LIBRARIES := liblog libcutils libGLES_mali
+LOCAL_SHARED_LIBRARIES := liblog libcutils libGLES_mali 
 
 LOCAL_SRC_FILES := \
         opencl_mu1.c
