@@ -39,7 +39,7 @@ void process_cfm_by_gpu(unsigned char *pDataDst, int nDstWidth, int nDstHeight, 
     int i,j, k;
 
 #ifndef NEON_MU1
-    LOGD("MU1 ---------------------- start C");
+    LOGD("MU1 ---------------------- start CPU");
     for(i=0; i<5120; i++) {
         for(j=0; j<1024; j++) {
             table_o[i][j] = (table_i[i][j] + table_q[i][j]) / (table_i[i][j] - table_q[i][j]);
@@ -51,7 +51,7 @@ void process_cfm_by_gpu(unsigned char *pDataDst, int nDstWidth, int nDstHeight, 
 
 
     int32x4_t z = vdupq_n_s32(1);
-    LOGD("MU1 ---------------------- start C");
+    LOGD("MU1 ---------------------- start NEON");
     for(i=0; i<5120; i++) {
 
 #if 0
