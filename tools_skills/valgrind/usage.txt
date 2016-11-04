@@ -1,0 +1,59 @@
+sudo apt-get install graphviz valgrind
+
+valgrind通常用来成分析程序性能及程序中的内存泄露错误
+
+一 Valgrind工具集简绍
+
+Valgrind包含下列工具：
+
+    1、memcheck：检查程序中的内存问题，如泄漏、越界、非法指针等。
+
+    2、callgrind：检测程序代码的运行时间和调用过程，以及分析程序性能。
+
+    3、cachegrind：分析CPU的cache命中率、丢失率，用于进行代码优化。
+
+    4、helgrind：用于检查多线程程序的竞态条件。
+
+    5、massif：堆栈分析器，指示程序中使用了多少堆内存等信息。
+
+    6、lackey：
+
+    7、nulgrind：
+
+这几个工具的使用是通过命令：valgrand --tool=name 程序名来分别调用的，当不指定tool参数时默认是 --tool=memcheck
+
+二 Valgrind工具详解
+
+1.Memcheck
+
+    最常用的工具，用来检测程序中出现的内存问题，所有对内存的读写都会被检测到，一切对malloc、free、new、delete的调用都会被捕获。所以，它能检测以下问题：
+
+       1、对未初始化内存的使用；
+
+       2、读/写释放后的内存块；
+
+       3、读/写超出malloc分配的内存块；
+
+       4、读/写不适当的栈中内存块；
+
+       5、内存泄漏，指向一块内存的指针永远丢失；
+
+       6、不正确的malloc/free或new/delete匹配；
+
+       7、memcpy()相关函数中的dst和src指针重叠。
+
+
+
+
+
+valgrind --leak-check=full ./程序名
+-----------------------------------
+
+
+2.Callgrind
+
+首先执行 gcc -pg -o tmp tmp.c，然后运行该程序./tmp，程序运行完成后会在当前目录下生成gmon.out文件（这个文件gprof在分析程序时需要），
+再执行gprof ./tmp | gprof2dot.py |dot -Tpng -o report.png，打开report.png结果：
+
+
+执行：valgrind --tool=callgrind ./tmp，执行完成后在目录下生成"callgrind.out.XXX"的文件这是分析文件，可以直接利用：callgrind_annotate callgrind.out.XXX 打印结果，也可以使用：gprof2dot.py -f callgrind callgrind.out.XXX |dot -Tpng -o report.png 来生成图形化结果:
