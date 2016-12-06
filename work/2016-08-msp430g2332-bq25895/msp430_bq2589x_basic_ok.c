@@ -431,10 +431,10 @@ void light_leds(unsigned int mode, unsigned short percent) {
     unsigned char a,b, idx, led_mode;
 
 #ifdef LS_DEBUG_LED
-	if(fault_flag!=0 && fault_flag!=0x02) {
+	if(fault_flag!=0) {
 		P2OUT=P2OUT&(~0x0F);
 		if((fault_flag&0x07)==0x01) P2OUT|=0x08;
-		//if((fault_flag&0x07)==0x02) P2OUT|=0x01;
+		if((fault_flag&0x07)==0x02) P2OUT|=0x01;
 		if((fault_flag&0x08)==0x08) P2OUT|=0x09;
 		if((fault_flag&0x30)==0x10) P2OUT|=0x02;
 		if((fault_flag&0x30)==0x20) P2OUT|=0x0A;
@@ -620,12 +620,7 @@ int main(void)
     write_bq2589x(0x03, v|0x10);
 
 
-#ifdef LS_DEBUG
-    //debug:dump all register
-    for(i=sizeof(regs); i>0; i--) {
-        read_bq2589x(i-1, &regs[i-1]);
-    }
-#endif
+
 
     while(1) {
 
@@ -633,6 +628,14 @@ int main(void)
         unsigned char reg_stat, reg_fault;
 
 
+#ifdef LS_DEBUG
+    //debug:dump all register
+    for(i=sizeof(regs); i>0; i--) {
+        read_bq2589x(i-1, &regs[i-1]);
+    }
+#endif
+
+    //read_bq2589x(0x10, &reg_fault);
         //P1IE &= ~0x04;                            // Button P1.2 interrupt disabled
         P1IFG &= ~0x04;                           // P1.2 IFG cleared
 
