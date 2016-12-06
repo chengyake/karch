@@ -541,13 +541,30 @@ unsigned short get_and_update_avg_sample(unsigned short voltage) {
 
 
 }
+static unsigned char high_flag=1;
+void high_current_limit() {
+	if(high_flag!=1) {
+		high_flag=1;
+		write_bq2589x(0x04, 0x02);
+		write_bq2589x(0x05, 0x11);
+		write_bq2589x(0x02, 0x02);
+	}
+}
 
+void low_current_limit() {
+	if(high_flag==1){
+		high_flag=0;
+		write_bq2589x(0x04, 0x02);
+		write_bq2589x(0x05, 0x11);
+		write_bq2589x(0x02, 0x02);
+	}
+}
 
 void init_bq2589x() {
 
     unsigned char v;
 
-    write_bq2589x(0x05, 0x12);           //Ipre and Iterm:128mA
+    high_current_limit();
 
 #ifndef BAT_LOW_VERSION
     write_bq2589x(0x06, 0x82);//voltage limit 4.352V = 3.840 + 0.512
@@ -571,6 +588,8 @@ void init_bq2589x() {
     write_bq2589x(0x0D, 0x80);		      //some how?? 0xFF
 
 }
+
+
 
 /*
  * P1.2                Button
@@ -657,7 +676,18 @@ int main(void)
         } else {
         	charge_complate=0;
         }
-        if((reg_stat&0x0E4) != 0x00) { 									   //power good
+        //--------------------------
+        if((reg_stat&0xE4) != 0x00) {										//power good
+        	if((reg_stat&0xE0) == 0x20 || (reg_stat&0xE0) == 0x40) {		//usb pc :just for rockchip problem
+        		low_current_limit();
+        	} else {														//adapter
+        		high_current_limit();
+        	}
+        } else {															//no power
+        	high_current_limit();
+        }
+        //--------------------------
+        if((reg_stat&0xE4) != 0x00) { 									   //power good
             button=0;//useless
             if(mode < 2) mode = 2;
             if((reg_stat&0xE0) == 0x20 || (reg_stat&0xE0) == 0x40) {       //usb pc
