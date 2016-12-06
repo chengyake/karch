@@ -1,0 +1,17 @@
+[retriever]
+type = SimplePOP3Retriever
+server = pop.lonshinetech.com
+username = chengyake@lonshinetech.com
+password = cheng429198
+
+[destination]
+type = Maildir
+path = /home/chengyake/.getmail/maildir/
+user = chengyake
+
+[options]
+read_all = False
+delete = False
+
+#接收邮件命令
+#getmail --rcfile=/home/mailuser/.getmail/getmailrc
