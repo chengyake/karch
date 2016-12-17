@@ -1,0 +1,388 @@
+
+
+
+环境定制：
+
+vim+cscope+taglist+dia+git+meld+minicom（高波特率CuteCom）
+
+1.ubuntu选取12.04 LTS版本为宜
+
+2.主目录：桌面->desktop  下载->download，其它删掉。
+
+3.安装使用Ubuntu one
+
+4.安装语言支持，针对中文
+
+5.vim vim-gnome cscope taglist dia git meld minicom cutecom
+
+6.配置vim
+
+vimrc.zip
+
+7.需授权等软件，如mp3等
+
+8.浏览器等flasher
+
+9.工作区：ubuntu12.04+,使用compizConfig，配置工作区等挺好用；win系统也可考虑多工作区方式
+
+
+
+sudo locate dbus.h
+
+
+
+
+todos     xxx
+fromdos xxx
+
+
+unix2dos=todos alias dos2unix=fromdunix2dos=todos alias dos2unix=fromd
+
+
+2013-04-15
+
+
+dia虽丑些，确相对实用：流程图，思维到图等。。。
+
+
+
+sftpDrive Manager    win->linux
+
+http://blog.chinaunix.net/uid-22896670-id-188789.html
+
+
+
+XDMCP, which stands for "X Display Manager Control Protocol"
+
+
+1. 首先配置Ubuntu使之允许远程访问
+
+点击 System -> Preference -> Remote Desktop，允许远程连接即可。
+
+
+2.修改gdm配置文件
+
+sudo cp /usr/share/doc/gdm/examples/custom.conf /etc/gdm/
+
+fengyun@fengyun-server:~$ vi /etc/gdm/custom.conf
+
+# GDM configuration storage
+
+[daemon]
+
+[security]
+
+[xdmcp]
+Enable=true
+DisplaysPerHost=2
+[greeter]
+
+[chooser]
+
+[debug]
+
+
+3、重启gdm
+
+sudo /etc/init.d/gdm restart
+
+
+4.执行命令
+
+sudo X :1 -query IP or hostname
+
+
+一般自己用的是图形化终端1，即F7
+
+远程用的是图形化终端2，即F8
+
+可以通过Ctrl+Alt+F7 or F8来切换
+
+/*************************************************/
+
+taglist:
+
+sudo apt-get install vim-scripts ctags &&  vim-addons install taglist
+
+ftp://ftp.denx.de/pub/u-boot/
+
+http://dict.ckid.net/ + starDict
+
+
+cscope  -R 包含子目录
+ -b 完成后退出
+
+cscope GUI
+ 方向键：搜索类型或搜索结果条目转换
+ TAB键：搜索类型和搜索结果之间转换
+
+在结果条目上enter，进入vim下的c文件
+退出vim 回到GUI
+
+
+crtl + D:退出cscope
+
+
+0 or s :查找本c符号 
+1 or g :查找本定义
+2 or d :查找本函数调用的函数
+3 or c :查找调用本函数的函数
+4 or t :查找本字符串
+6 or e :查找本 egrap模式
+7 or f :查找本文件
+8 or i :查找包含本文件的文件
+
+"ctrl + w" + w or 方向键 切换窗口
+
+
+"ctrl + \" + * = 同上面功能：
+:q or "ctrl + w" +c = 关闭分割窗口
+
+ 在#ifdef #else #end 之间切换使用 %号即可
+
+vim中大小写转化的命令是
+gu或者gU
+删除列
+1.光标定位到要操作的地方。
+2.CTRL+v 进入“可视 块”模式，选取这一列操作多少行。
+3.d 删除。
+ 
+插入列
+插入操作的话知识稍有区别。例如我们在每一行前都插入"() "：
+1.光标定位到要操作的地方。
+2.CTRL+v 进入“可视 块”模式，选取这一列操作多少行。
+3.SHIFT+i(I) 输入要插入的内容。
+4.ESC 按两次，会在每行的选定的区域出现插入的内容。
+
+
+
+/************** 快 捷 键 ******************/
+Alt+Home    firefox的主页
+Alt+n           标签间跳转
+
+
+vim
+Ctrl+w  v      垂直分割窗体
+Ctrl+w  h      水平分割窗体
+Ctrl+w  方向  窗体切换
+Ctrl+w  c       推出窗体
+gg
+GG
+:! shell_cmd
+
+
+gd              选词
+
+vim+cscope+ctarg
+
+
+在终端中打开目录：
+
+gnome-open xxx
+
+
+:%s/**/**/g
+
+区域替换：
+
+选中一部分，然后：
+
+输入： s/xx/yy/g
+
+即可
+
+
+
+sudo apt-get install vim-gnome
+
+后便可以使用“+yy和”+p来复制粘贴
+
+
+
+set mouse=v
+
+set mouse=a
+
+
+u：撤销
+
+ctrl+r：重做
+
+ctrl+o:上次跳转
+
+n：下次匹配
+
+
+ctrl+w：删除字
+
+shift+方向：字移动
+
+
+
+VIM格式化代码： 
+格式化全文指令 gg=G 
+自动缩进当前行指令 == 
+      格式化当前光标接下来的8行 8= 
+      格式化选定的行 v 选中需要格式化的代码段 = 
+      备注： 
+gg —— 到达文件最开始 
+= —— 要求缩进 
+G     —— 直到文件尾 
+注释代码：(这个原理上就是使用VIM的正则替换) 
+以C++和Python为例。 
+注释连续行： 
+指令格式 :起始行,终止行s/要替换的字符/替换为字符/g 
+如， 
+      C++源文件中注释掉10~20行，指令为： 
+:10,20s/^/////g 
+Python源文件中注释掉10~20行，指令为： 
+:10,20s/^/#/g 
+取消连续行注释： 
+指令格式同上。只是要替换字符与替换为字符要互换： 
+如， 
+      取消C++源文件中的10~20行的注释，指令为： 
+:10,20s/^//////g 
+取消Python源文件中的10~20行的注释，指令为： 
+:10,20s/^#//g
+
+
+
+利用watch重复执行某动作，但类似sl的命令除外，兼容0.1s等。。。
+watch -n20 'ls'
+
+
+
+
+
+
+
+play和sox是Linux下两个非常重要的命令，利用play命令可以播放各种各样的音乐文件，利用sox可以对各种各样的文件进行多种编辑。昨天我初试了这两个，感觉到非常方便，非常好使。
+
+　　在Ubuntu下的桌面上，按Ctrl+F1，进入Linux下的命令行模式。
+
+　常用的功能就是听音乐了，输入play [musicFilename]，musicFilename可以是mp3, ogg和其他的一些音乐文件，不过微软的wma好像无法识别阿Q播放音乐的效果一点儿也不次于其他图形化界面的音乐软件，而且在命令行的模式下，进行音乐 播放时play还给出了音乐文件的基本信息，如频率、播放时间等等。
+
+　　sox这个命令非常强大，想当年在Windows下想把两个音乐和到一起都要下载软件，许多软件还是试用版的，非常不爽。
+
+　现在只需要输入sox music1Filename music2Filename resultFilename，其中music1Filename和music2Filename是源音乐文件而resultFilename是你要转换 成为的音乐文件，这样就可以把两个音乐文件转换成一个音乐文件了，多方便。
+
+
+
+
+
+
+
+
+1.sl
+2.rev 反转
+
+3.fortune
+
+4.figlet
+
+5.toilet
+
+6.cowsay
+
+7.oneko
+ 
+  windowspager-1.02   多窗口win7
+
+sudo fbgrab -c 1 tty1.png。-c 1表示的是截取tty1中显示的图像.
+
+ffmpeg  -vcodec rawvideo -f rawvideo -pix_fmt rgb32 -s 1472x900 -i tmp.raw -vframes 1 -f image2 -vcodec png output.png
+
+
+第一步: 确认你有一个64位架构的内核
+你可以打开终端然后输入：
+
+1.dpkg --print-architecture
+
+amd64
+
+这说明着你已经拥有了64位架构内核。
+
+ 
+
+第二步: 确认你打开了多架构支持功能
+(多架构支持可以让你在有64位库的情况下使用32位库。)
+输入:
+1.dpkg --print-foreign-architectures
+
+输出是: i386
+
+如果你还没有多架构支持你需要打开它。
+
+
+另一种第二步: 打开多架构支持。
+
+输入:
+1.sudo dpkg --add-architecture i386
+
+2.sudo apt -get update
+
+然后就会开始下载更新然后运行。
+
+ 
+
+之后你需要输入:
+
+1.sudo apt-get –f dist-upgrade
+
+它会检查你已经拥有的库文件是否有更新的版本。
+
+ 
+
+若果然有的话，它会问你是否需要更新(y/n)。
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+（一）Problem description:
+删除主文件夹下的：文档，模板，视频，音乐，桌面等文件夹之后，重新开机后所有主文件夹下的内容都出现在桌面
+（二）Solution：
+vim ~/.config/user-dirs.dirs
+2.1 修改前：
+# If you want to change or add directories, just edit the line you're
+# interested in. All local changes will be retained on the next run
+# Format is XDG_xxx_DIR="$HOME/yyy", where yyy is a shell-escaped
+# homedir-relative path, or XDG_xxx_DIR="/yyy", where /yyy is an
+# absolute path. No other format is supported.
+#
+XDG_DESKTOP_DIR="$HOME/"
+XDG_DOWNLOAD_DIR="$HOME/"
+XDG_TEMPLATES_DIR="$HOME/"
+XDG_PUBLICSHARE_DIR="$HOME/"
+XDG_DOCUMENTS_DIR="$HOME/"
+XDG_MUSIC_DIR="$HOME/"
+XDG_PICTURES_DIR="$HOME/"
+XDG_VIDEOS_DIR="$HOME/"
+
+2.2 修改后：
+# If you want to change or add directories, just edit the line you're
+# interested in. All local changes will be retained on the next run
+# Format is XDG_xxx_DIR="$HOME/yyy", where yyy is a shell-escaped
+# homedir-relative path, or XDG_xxx_DIR="/yyy", where /yyy is an
+# absolute path. No other format is supported.
+#
+XDG_DESKTOP_DIR="$HOME/Desktop"
+XDG_DOWNLOAD_DIR="$HOME/Download"
+XDG_TEMPLATES_DIR="$HOME/Templates"
+XDG_PUBLICSHARE_DIR="$HOME/Public"
+XDG_DOCUMENTS_DIR="$HOME/Documents"
+XDG_MUSIC_DIR="$HOME/Music"
+XDG_PICTURES_DIR="$HOME/Pictures"
+XDG_VIDEOS_DIR="$HOME/Videos"
+
+2.3 验证：重启系统
