@@ -1,0 +1,6 @@
+1. 修改端口
+    sudo dpkg-reconfigure digits
+
+
+
+
