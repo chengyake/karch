@@ -127,10 +127,21 @@
 
 
 
+使用deb安装cuda、驱动和digits既可，caffe源码编译安装
+
+gisdom@server-gpu:~/Download$ ls -lh
+总用量 1.9G
+-rw-rw-r-- 1 gisdom gisdom 1.8G 3月  14 13:45 cuda-repo-ubuntu1604-8-0-local-ga2_8.0.61-1_amd64.deb
+drwxrwxr-x 9 gisdom gisdom 4.0K 3月  14 13:55 gflags
+-rw-rw-r-- 1 gisdom gisdom 116M 3月  14 13:24 nv-deep-learning-repo-ubuntu1604-ga-cuda8.0-digits5.0_1-1_amd64.deb
 
 
 
-
-
-
-
+循环登录问题
+ 解决方法
+利用sudo gedit /etc/modprobe.d/blacklist-nouveau.conf新建blacklist-nouveau.conf文件，输入命令
+blacklist nouveau
+blacklist lbm-nouveau
+options nouveau modeset=0
+alias nouveau off
+alias lbm-nouveau off
