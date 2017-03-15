@@ -145,3 +145,7 @@ blacklist lbm-nouveau
 options nouveau modeset=0
 alias nouveau off
 alias lbm-nouveau off
+
+
+but:使用deb安装到digits，自带为0.x版本，最新为1.0.x版本;最好使用源码方式安装caffe和digits
+
