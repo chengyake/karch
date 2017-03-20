@@ -1,0 +1,13 @@
+
+类似android,但底层os可不拘泥，符合API即可。hal and lua only machine
+使用EIT(类似CIT)方式检验API规范，符合则可完全兼容
+
+EIT two level
+1. api
+2. hardware -> hardware
+
+lua convert to c from EIT api level
+
+
+
+
