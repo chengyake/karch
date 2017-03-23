@@ -618,7 +618,7 @@ int main(void)
     P1IFG &= ~0x04;                           // P1.2 IFG cleared
 
     P2DIR |= 0x0F;                            // Set P2.0 to output direction
-    P2REN |= 0x0F;
+    //P2REN |= 0x0F;
     P2OUT &= ~0x0F;							  //clear all leds
     P2IE |= 0x20;                             // P2.5 interrupt enabled
     P2IES |= 0x20;                            // P2.5 Hi/lo edge
