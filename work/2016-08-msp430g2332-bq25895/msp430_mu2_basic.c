@@ -18,7 +18,7 @@
 unsigned char regs[21]={0};
 #endif
 
-unsigned char level_flag1=0, level_flag2=0;
+unsigned char level_flag1=0, level_flag2=0, display=0, batv_4level=0, sys_inited=0;
 unsigned short ticks=0;
 unsigned char led=0, flash=0, brightness=8;
 //just for i2c
@@ -26,7 +26,29 @@ unsigned char reg, value_w, *value_r;           // Variable for transmitted data
 unsigned char I2C_State, Success, Transmit;     // State variable
 //misc function
 void mdelay(unsigned char n);
+unsigned char read_bq2589x(unsigned char r, unsigned char *v);
 
+
+void get_bat_level() {
+
+    unsigned short batv;
+    unsigned char reg_E;
+
+    read_bq2589x(0x0E, &reg_E);
+    batv = (reg_E&0x7F)*20 + 2304;
+
+    batv_4level=1;
+    if(batv>3800) {
+        batv_4level=2;
+    }
+    if(batv>4000) {
+        batv_4level=3;
+    }
+    if(batv>4200) {
+        batv_4level=4;
+    }
+
+}
 
 // Port 2 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
@@ -54,17 +76,34 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 #endif
 {
     ticks++;
-    if(ticks>=1000) ticks=0;
+    if(ticks>=1100) {
+        ticks=0;
+        if(display>0) {
+            get_bat_level();
+            display=0;
+        }
+        if(batv_4level>0) {
+            batv_4level--;
+        }
+    }
 
-    if(flash) {
-        if( ticks<500 && ticks%brightness==0) {
-            P2OUT =  (P2OUT|0x0E)&~led;
+    if(display==0 && batv_4level==0) {
+        if(flash) {
+            if( ticks<500 && ticks%brightness==0) {
+                P2OUT =  (P2OUT|0x0E)&~led;
+            } else {
+                P2OUT =  P2OUT|0x0E;
+            }
         } else {
-            P2OUT =  P2OUT|0x0E;
+            if(ticks%brightness==0) {
+                P2OUT =  (P2OUT|0x0E)&~led;
+            } else {
+                P2OUT =  P2OUT|0x0E;
+            }
         }
     } else {
-        if(ticks%brightness==0) {
-            P2OUT =  (P2OUT|0x0E)&~led;
+        if( ticks<500) {
+            P2OUT =  (P2OUT|0x0E)&~0x02;
         } else {
             P2OUT =  P2OUT|0x0E;
         }
@@ -261,7 +300,6 @@ void Setup_USI_Master_RX ()
     Transmit = 0;
     Setup_USI_Master();
     __enable_interrupt();
-
 }
 
 unsigned char write_bq2589x(unsigned char r, unsigned char v) {
@@ -296,14 +334,6 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
     return 1;
 }
 
-void delay_cycles(unsigned short t) {
-    unsigned char i;
-    for(i=t; i>0; i--) {
-        __delay_cycles(10000);
-    }
-}
-
-
 void enable_timer() {
     CCR0 = 5000;
     CCTL0 |= CCIE;                            // CCR0 interrupt enabled
@@ -334,7 +364,7 @@ void power_leds(unsigned char on) {
     }
 }
 /*
- * color:0 off; 1 blue; 2 yellow
+ * color:0 off; 1 green; 2 blue; 3 red(error)
  * flash:0 on;  1 flash
  * brightness: 8 wakest
  */
@@ -344,8 +374,10 @@ void status_leds(unsigned char color, unsigned char flash_flag, unsigned short b
         led=0x00;
     } else if(color==1) {
         led=0x04;
-    } else {
+    } else if(color==2) {
         led=0x02;
+    } else {
+        led=0x08;
     }
 
     brightness=8;
@@ -380,40 +412,6 @@ void init_bq2589x() {
 
 }
 
-
-void show_bat_level(unsigned short batv) {
-
-    unsigned char reg_E;
-    P2OUT = (P2OUT|0x0E)&~0x02;
-    delay_cycles(1000);
-    P2OUT = P2OUT|0x0E;
-
-    read_bq2589x(0x0E, &reg_E);
-    batv = (reg_E&0x7F)*20 + 2304;
-
-    if(batv>3800) {
-        delay_cycles(1000);
-        P2OUT = (P2OUT|0x0E)&~0x02;
-        delay_cycles(1000);
-        P2OUT = P2OUT|0x0E;
-    }
-
-    if(batv>4100) {
-        delay_cycles(1000);
-        P2OUT = (P2OUT|0x0E)&~0x02;
-        delay_cycles(1000);
-        P2OUT = P2OUT|0x0E;
-    }
-
-    if(batv>4100) {
-        delay_cycles(1000);
-        P2OUT = (P2OUT|0x0E)&~0x02;
-        delay_cycles(1000);
-        P2OUT = P2OUT|0x0E;
-    }
-
-    delay_cycles(200);
-}
 
 /*
  * P1.2                Button
@@ -469,25 +467,26 @@ int main(void)
                 if((reg_B&0x18) == 0x18) {    //charge complate
                     status_leds(1, 0, batv);
                 } else if((reg_B&0x18) == 0x18) { //no charging
-                    status_leds(0, 0, batv);
+                    status_leds(3, 0, batv);
                 } else {                      //charging
                     status_leds(1, 1, batv);
                 }
             } else if(reg_C == 0x01) { //Ts cold
                 status_leds(0, 0, batv);
             } else {//get fault
-                status_leds(2, 0, batv);
+                status_leds(3, 0, batv);
             }
         } else {//no power
             power_leds(0);
         }
-/*
+
         level_flag2 = level_flag1;
         level_flag1 = reg_C&0x01;
-        if (level_flag1==0 && level_flag2==1) {
-            show_bat_level(batv);
+        if ((level_flag1==0 && level_flag2==1) || (sys_inited==0 && reg_C==0x00 && reg_B&0x04)) {
+            sys_inited=1;
+            display=1;
+            ticks=0;
         }
-*/
 
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
