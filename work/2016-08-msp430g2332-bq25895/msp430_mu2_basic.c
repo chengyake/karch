@@ -76,7 +76,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 #endif
 {
     ticks++;
-    if(ticks>=1100) {
+    if(ticks>=110) {
         ticks=0;
         if(display>0) {
             get_bat_level();
@@ -89,20 +89,16 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 
     if(display==0 && batv_4level==0) {
         if(flash) {
-            if( ticks<500 && ticks%brightness==0) {
+            if(ticks<50) {
                 P2OUT =  (P2OUT|0x0E)&~led;
             } else {
                 P2OUT =  P2OUT|0x0E;
             }
         } else {
-            if(ticks%brightness==0) {
-                P2OUT =  (P2OUT|0x0E)&~led;
-            } else {
-                P2OUT =  P2OUT|0x0E;
-            }
+            P2OUT =  (P2OUT|0x0E)&~led;
         }
     } else {
-        if( ticks<500) {
+        if( ticks<50) {
             P2OUT =  (P2OUT|0x0E)&~0x02;
         } else {
             P2OUT =  P2OUT|0x0E;
@@ -110,7 +106,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
     }
 
 
-    CCR0 += 1000;                              // Add Offset to CCR0
+    CCR0 += 10000;                              // Add Offset to CCR0
     LPM0_EXIT;
 }
 
@@ -335,7 +331,7 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
 }
 
 void enable_timer() {
-    CCR0 = 5000;
+    CCR0 = 10000;
     CCTL0 |= CCIE;                            // CCR0 interrupt enabled
     TACTL = TASSEL_2 + MC_2;                  // SMCLK, contmode
 }
@@ -471,7 +467,7 @@ int main(void)
                 } else {                      //charging
                     status_leds(1, 1, batv);
                 }
-            } else if(reg_C == 0x01) { //Ts cold
+            } else if(reg_C == 0x01 && batv==2304) { //Ts cold and no battery
                 status_leds(0, 0, batv);
             } else {//get fault
                 status_leds(3, 0, batv);
