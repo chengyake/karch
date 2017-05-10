@@ -1,54 +1,59 @@
 #include <msp430.h>
 
+//50ms/per
+#define LED_ON_TIME (20)
+#define LONG_PRESS_TIME (30)
+//#define BAT_LOW_VERSION
+//#define LS_DEBUG
+#define SLAVE_ADDR  (0xD4)  //0x6A
 
 /*
- * 2017-04-26
- * rules:
- * A:   light Green,Power Good
- * B:   Green led off,Power Disable
- *
- * a:   flash blue always; charging
- * b:   blue led on; charge complate
- * c:   flash yellow; error case
+ * 2017-05-10 10:18
+ * mode:
+ * 0:idle    1:display once     2:charge    3:work
  */
 
-#define SLAVE_ADDR  (0xD4)  //0x6A
-//#define LS_DEBUG
+unsigned char mode=0;
+unsigned char short_press=0, long_press=0;
+unsigned char reg_B, reg_C, reg_E;
+
+#ifdef BAT_LOW_VERSION
+//const                               close 1led  2led  3led  4leds always on
+const unsigned short idle_th[] =        {3650, 3700, 3800, 3950};
+const unsigned short charge_th[] =      {3650, 3700, 3800, 3950};
+const unsigned short discharge_th[] =   {3530, 3660, 3740, 3900};
+#else
+const unsigned short idle_th[] =        {3650, 3800, 4000, 4200};
+const unsigned short charge_th[] =      {3750, 3900, 4100, 4300};
+const unsigned short discharge_th[] =   {3520, 3650, 3900, 4100};
+#endif
+
 #ifdef LS_DEBUG
 unsigned char regs[21]={0};
 #endif
 
-unsigned char level_flag1=0, level_flag2=0, display=0, batv_4level=0, sys_inited=0;
-unsigned short ticks=0;
-unsigned char led=0, flash=0, brightness=8;
-static unsigned char fault_count=0;
+
+
 //just for i2c
 unsigned char reg, value_w, *value_r;           // Variable for transmitted data
 unsigned char I2C_State, Success, Transmit;     // State variable
-//misc function
-void mdelay(unsigned char n);
-unsigned char read_bq2589x(unsigned char r, unsigned char *v);
 
+void get_batv();
 
-void get_bat_level() {
-
-    unsigned short batv;
-    unsigned char reg_E;
-
-    read_bq2589x(0x0E, &reg_E);
-    batv = (reg_E&0x7F)*20 + 2304;
-
-    batv_4level=1;
-    if(batv>3800) {
-        batv_4level=2;
-    }
-    if(batv>4000) {
-        batv_4level=3;
-    }
-    if(batv>4200) {
-        batv_4level=4;
-    }
-
+// Port 1 interrupt service routine
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=PORT1_VECTOR
+__interrupt void Port_1(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
+#else
+#error Compiler not supported!
+#endif
+{
+    //P1IE &= ~0x04;                             // P1.2 interrupt disabled
+    P1IFG &= ~0x04;                           // P1.2 IFG cleared
+    short_press = 1;
+    LPM0_EXIT;
 }
 
 // Port 2 interrupt service routine
@@ -66,6 +71,7 @@ void __attribute__ ((interrupt(PORT2_VECTOR))) Port_2 (void)
 }
 
 
+
 // Timer A0 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=TIMER0_A0_VECTOR
@@ -76,39 +82,19 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 #error Compiler not supported!
 #endif
 {
-    ticks++;
-    if(ticks>=110) {
-        ticks=0;
-        if(display>0) {
-            get_bat_level();
-            display=0;
-        }
-        if(batv_4level>0) {
-            batv_4level--;
-        }
-    }
-
-    if(display==0 && batv_4level==0) {
-        if(flash) {
-            if(ticks<50) {
-                P2OUT =  (P2OUT|0x0E)&~led;
-            } else {
-                P2OUT =  P2OUT|0x0E;
-            }
-        } else {
-            P2OUT =  (P2OUT|0x0E)&~led;
+    static unsigned char press_time=0;
+    if((P1IN&0x04) == 0) {
+        if(press_time < 255) press_time++;
+        if(press_time == LONG_PRESS_TIME) {
+            long_press=1;
         }
     } else {
-        if( ticks<50) {
-            P2OUT =  (P2OUT|0x0E)&~0x02;
-        } else {
-            P2OUT =  P2OUT|0x0E;
-        }
+        press_time=0;
+        long_press=0;
     }
 
-
-    CCR0 += 10000;                              // Add Offset to CCR0
-    LPM0_EXIT;
+    CCR0 += 50000;                              // Add Offset to CCR0
+    LPM0_EXIT;                                  //double check
 }
 
 /******************************************************
@@ -297,6 +283,7 @@ void Setup_USI_Master_RX ()
     Transmit = 0;
     Setup_USI_Master();
     __enable_interrupt();
+
 }
 
 unsigned char write_bq2589x(unsigned char r, unsigned char v) {
@@ -332,7 +319,7 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
 }
 
 void enable_timer() {
-    CCR0 = 10000;
+    CCR0 = 50000;
     CCTL0 |= CCIE;                            // CCR0 interrupt enabled
     TACTL = TASSEL_2 + MC_2;                  // SMCLK, contmode
 }
@@ -341,44 +328,107 @@ void disable_timer() {
     CCTL0 &= ~CCIE;                             // CCR0 interrupt enabled
 }
 
-void power_leds(unsigned char on) {
-    if(on) {
-        P2OUT |= 0x01;
+unsigned char get_idx(unsigned short batv, const unsigned short *th) {
+
+    if(batv <= th[0]) {
+        return 0;
+    } else if(batv <= th[1]) {
+        return 1;
+    } else if(batv <= th[2]) {
+        return 2;
+    } else if(batv <= th[3]) {
+        return 3;
     } else {
-        P2OUT &= ~0x01;
+        return 4;
     }
 }
-/*
- * color:0 off; 1 green; 2 blue; 3 red(error)
- * flash:0 on;  1 flash
- * brightness: 8 wakest
- */
-void status_leds(unsigned char color, unsigned char flash_flag, unsigned short batv) {
 
-    if(color==0) {
-        led=0x00;
-    } else if(color==1) {
-        led=0x04;
-    } else if(color==2) {
-        led=0x02;
-    } else {
-        led=0x08;
+void light_leds(unsigned int mode, unsigned short percent) {
+
+    static unsigned char flash=0;
+    unsigned char a,b, idx, led_mode;
+
+    if(mode > 1 && reg_B&0x18 == 0x18) {
+        P2OUT|=0x0F;
+        return;
+    }
+    switch (mode) {
+
+        case 0:
+            led_mode=0;
+            idx=0;
+            break;
+        case 1:
+            led_mode=0;
+            idx=get_idx(percent, &idle_th[0]);
+            break;
+        case 2:
+            led_mode=1;
+            idx=get_idx(percent, &charge_th[0]);
+            break;
+        case 3:
+            led_mode=1;
+            idx=get_idx(percent, &discharge_th[0]);
+            break;
+        default:
+            led_mode=0;
+            idx=0;
+            break;
+    }
+    switch (idx) {
+        case 0:
+            a=0x00;
+            b=0x00;
+            break;
+        case 1:
+            a=0x00;
+            b=0x04;
+            break;
+        case 2:
+            a=0x04;
+            b=0x06;
+            break;
+        case 3:
+            a=0x06;
+            b=0x07;
+            break;
+        case 4:
+            a=0x07;
+            b=0x0F;
+            break;
+        default:
+            led_mode =0;
+            a=0xFF;
+            b=0xFF;
+            break;
     }
 
-    brightness=8;
-    if(batv > 3800) brightness=4;
-    if(batv > 4000) brightness=2;
-    if(batv > 4200) brightness=1;
-
-    flash=flash_flag;
+    if(led_mode) {
+        flash^=0x01;
+        if(flash)
+            P2OUT = ((P2OUT&(~0x0F))|a);
+        else
+            P2OUT = ((P2OUT&(~0x0F))|b);
+    } else {
+        P2OUT = ((P2OUT&(~0x0F))|b);
+    }
 }
+
+
 
 void init_bq2589x() {
 
     unsigned char v;
 
-    write_bq2589x(0x02, 0xFD);//start 1Hz ADC
+
+#ifndef BAT_LOW_VERSION
     write_bq2589x(0x06, 0x82);//voltage limit 4.352V = 3.840 + 0.512
+#else
+    write_bq2589x(0x06, 0x5E);//voltage limit 4.208V by default
+#endif
+
+    //start 1Hz ADC
+    write_bq2589x(0x02, 0x7D);
 
     //disable wdog and stat pin
     read_bq2589x(0x07, &v);
@@ -398,18 +448,16 @@ void init_bq2589x() {
 }
 
 
+
 /*
  * P1.2                Button
  * P1.3                VOTG
  * P2.5                INT BQ
- * P1.6-P1.7   I2C
- * P2.0-P2.3   LEDs
+ * P1.6-P1.7           I2C
+ * P2.0-P2.3           LEDs
  */
 int main(void)
 {
-    unsigned short batv=0;
-    unsigned char reg_B, reg_C, reg_E;
-
     WDTCTL = WDTPW + WDTHOLD;                 // Stop watchdog
     /*if (CALBC1_1MHZ==0xFF)                    // If calibration constant erased
       {
@@ -419,66 +467,111 @@ int main(void)
     BCSCTL1 = CALBC1_1MHZ;                    // Set DCO
     DCOCTL = CALDCO_1MHZ;
 
+    P1DIR |= 0x08;                            // Set P1.3 to output direction
+    P1OUT = 0xC0;                             // P1.6 & P1.7 Pullups, others to 0
+    P1REN |= 0xC0;                            // P1.6 & P1.7 Pullups
+    P1IE |= 0x04;                             // P1.2 interrupt enabled
+    P1IES |= 0x04;                            // P1.2 Hi/lo edge
+    P1IFG &= ~0x04;                           // P1.2 IFG cleared
+
     P2DIR |= 0x0F;                            // Set P2.0 to output direction
-    P2OUT = (P2OUT&~0x0F)|0x0E;               //clear all leds
+    //P2REN |= 0x0F;
+    P2OUT &= ~0x0F;                           //clear all leds
     P2IE |= 0x20;                             // P2.5 interrupt enabled
     P2IES |= 0x20;                            // P2.5 Hi/lo edge
     P2IFG &= ~0x20;                           // P2.5 IFG cleared
 
-    P1OUT = 0xC0;                             // P1.6 & P1.7 Pullups, others to 0
-    P1REN |= 0xC0;                            // P1.6 & P1.7 Pullups
-
-
     init_bq2589x();
-    enable_timer();
+
+    __no_operation();
+
 
     while(1) {
+
+
+
+
 #ifdef LS_DEBUG
     //debug:dump all register
-    unsigned char i;
     for(i=sizeof(regs); i>0; i--) {
         read_bq2589x(i-1, &regs[i-1]);
     }
 #endif
 
-        read_bq2589x(0x0B, &reg_B);
+
+        //error handle
         read_bq2589x(0x0C, &reg_C);
+        if(reg_C != 0x00) {
+            read_bq2589x(0x0C, &reg_C);
+        }
+
+        //mode, votg
+        read_bq2589x(0x0B, &reg_B);
         read_bq2589x(0x0E, &reg_E);
-        batv = (reg_E&0x7F)*20 + 2304;
 
-        if(reg_B&0x04) {//power good
-            power_leds(1);
-            if(reg_C == 0x00) {
-                fault_count=0;
-                if((reg_B&0x18) == 0x18) {        //charge complate
-                    status_leds(1, 0, batv);
-                } else if((reg_B&0x18) == 0x18) { //no charging
-                    status_leds(3, 0, batv);
-                } else {                          //charging
-                    status_leds(1, 1, batv);
+
+        switch (mode) {
+            case 0: {
+                if(short_press==1) {   //into mode 1
+                    mode = 1;
+                    enable_timer();
+                } else if(reg_B&0xE4) {//into mode 2
+                    mode = 2;
+                    enable_timer();
+                } else {               //in mode 0
+                    disable_timer();
                 }
-            } else if(reg_C == 0x01) { //Ts cold and no battery
-                status_leds(0, 0, batv);
-                if(fault_count<222) fault_count++;
-                if(batv!=2304 && fault_count>220) {
-                    //get fault
-                    status_leds(3, 0, batv);
-                }
+                P1OUT &= (~0x08);
+                light_leds(mode, 0);
+                break;
             }
-        } else {//no power    //battery R DNP
-            //never get here
-            power_leds(0);
-            status_leds(0, 0, batv);
+
+            case 1: {
+                static unsigned char ledon = 0;
+                ledon++;
+                if(ledon > LED_ON_TIME) {       //into mode 0
+                    ledon = 0;
+                    mode = 0;
+                } else {
+                    P1OUT &= (~0x08);           //in mode 1
+                    light_leds(mode, (reg_E&0x7F)*20 + 2304);
+                }
+                break;
+            }
+
+            case 2: {
+                if((reg_B&0xE4) == 0) {                 //into mode 0
+                    mode = 0;
+                } else if(long_press==1 && ((reg_B&0xE0) == 0x20 ||
+                        (reg_B&0xE0) == 0x40)) {        //into mode 3
+                    mode=3;
+                } else {
+                    P1OUT &= (~0x08);                   //in mode 2
+                    light_leds(mode, (reg_E&0x7F)*20 + 2304);
+                }
+                break;
+            }
+
+            case 3: {
+                if((reg_B&0xE4) == 0) {     //into mode 0
+                    mode = 0;
+                } else if(long_press==1) {     //into mode 2
+                    mode=2;
+                } else {
+                    P1OUT |= 0x08;          //in mode 3
+                    light_leds(mode, (reg_E&0x7F)*20 + 2304);
+                }
+                break;
+            }
         }
 
-        level_flag2 = level_flag1;
-        level_flag1 = reg_C&0x01;
-        if ((level_flag1==0 && level_flag2==1) || (sys_inited==0 && reg_C==0x00 && reg_B&0x04)) {
-            sys_inited=1;
-            display=1;
-            ticks=0;
-        }
+        //clear event
+        short_press=0;
+        long_press=0;
 
+        //P1IE |= 0x04;                             // P1.2 interrupt enabled
         __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
     }
 }
+
+
