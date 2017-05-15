@@ -1,6 +1,7 @@
 #include <msp430.h>
 
 //50ms/per
+#define AVG_NUM (5)
 #define LED_ON_TIME (20)
 #define LONG_PRESS_TIME (30)
 //#define BAT_LOW_VERSION
@@ -16,16 +17,19 @@
 unsigned char mode=0;
 unsigned char short_press=0, long_press=0;
 unsigned char reg_B, reg_C, reg_E;
+unsigned short avg[AVG_NUM]={0};
+unsigned short avg_counter=0x0FFF;
+
 
 #ifdef BAT_LOW_VERSION
 //const                               close 1led  2led  3led  4leds always on
-const unsigned short idle_th[] =        {3650, 3700, 3800, 3950};
-const unsigned short charge_th[] =      {3650, 3700, 3800, 3950};
-const unsigned short discharge_th[] =   {3530, 3660, 3740, 3900};
+const unsigned short idle_th[] =        {3650, 3700, 3800, 4100};
+const unsigned short charge_th[] =      {3650, 3700, 3800, 4150};
+const unsigned short discharge_th[] =   {3530, 3660, 3740, 4000};
 #else
-const unsigned short idle_th[] =        {3650, 3800, 4000, 4200};
-const unsigned short charge_th[] =      {3750, 3900, 4100, 4300};
-const unsigned short discharge_th[] =   {3520, 3650, 3900, 4100};
+const unsigned short idle_th[] =        {3650, 3850, 4050, 4240};
+const unsigned short charge_th[] =      {3700, 3850, 4050, 4250};
+const unsigned short discharge_th[] =   {3400, 3700, 3900, 4100};
 #endif
 
 #ifdef LS_DEBUG
@@ -69,7 +73,6 @@ void __attribute__ ((interrupt(PORT2_VECTOR))) Port_2 (void)
     P2IFG &= ~0x20;                           // P2.5 IFG cleared
     LPM0_EXIT;
 }
-
 
 
 // Timer A0 interrupt service routine
@@ -343,12 +346,13 @@ unsigned char get_idx(unsigned short batv, const unsigned short *th) {
     }
 }
 
+
 void light_leds(unsigned int mode, unsigned short percent) {
 
-    static unsigned char flash=0;
+    static unsigned char flash=0, flash_counter=0;
     unsigned char a,b, idx, led_mode;
 
-    if(mode > 1 && reg_B&0x18 == 0x18) {
+    if(mode > 1 && ((reg_B&0x18) == 0x18)) {
         P2OUT|=0x0F;
         return;
     }
@@ -404,17 +408,57 @@ void light_leds(unsigned int mode, unsigned short percent) {
     }
 
     if(led_mode) {
-        flash^=0x01;
+        flash_counter++;
+
+        if(flash_counter > 10) {
+            flash^=0x01;
+            flash_counter=0;
+        }
         if(flash)
             P2OUT = ((P2OUT&(~0x0F))|a);
         else
             P2OUT = ((P2OUT&(~0x0F))|b);
     } else {
+        flash_counter =0;
         P2OUT = ((P2OUT&(~0x0F))|b);
     }
 }
 
 
+void clear_avg() {
+
+    unsigned char i=0;
+    for(i=0; i<AVG_NUM; i++) {
+        avg[i]=0;
+    }
+
+}
+
+static unsigned char c=0;
+void update_avg(unsigned short batv) {
+
+    avg[c] = batv;
+    c++;
+    if(c>AVG_NUM) c=0;
+}
+
+unsigned short get_avg() {
+
+    unsigned char i=0;
+    unsigned short num=0;
+    unsigned short sum=0;
+
+    for(i=0; i<AVG_NUM; i++) {
+        if(avg[i]!=0) {
+            num++;
+            sum+=avg[i];
+        }
+    }
+    if(num==0)
+        return 0;
+    else
+        return (sum/num);
+}
 
 void init_bq2589x() {
 
@@ -447,7 +491,11 @@ void init_bq2589x() {
 
 }
 
+void reset_bq2589x() {
 
+    write_bq2589x(0x14, 0x80);
+    __delay_cycles(20000);
+}
 
 /*
  * P1.2                Button
@@ -481,17 +529,21 @@ int main(void)
     P2IES |= 0x20;                            // P2.5 Hi/lo edge
     P2IFG &= ~0x20;                           // P2.5 IFG cleared
 
-    init_bq2589x();
+    reset_bq2589x();
 
     __no_operation();
+
+    init_bq2589x();
+
 
 
     while(1) {
 
-
+        unsigned short batv;
 
 
 #ifdef LS_DEBUG
+    unsigned char i=0;
     //debug:dump all register
     for(i=sizeof(regs); i>0; i--) {
         read_bq2589x(i-1, &regs[i-1]);
@@ -507,22 +559,29 @@ int main(void)
 
         //mode, votg
         read_bq2589x(0x0B, &reg_B);
-        read_bq2589x(0x0E, &reg_E);
-
+        avg_counter++;
+        if(avg_counter > 20 || mode == 1) {
+            avg_counter = 0;
+            read_bq2589x(0x0E, &reg_E);
+            batv = (reg_E&0x7F)*20 + 2304;
+            update_avg(batv);
+            batv = get_avg();
+        }
 
         switch (mode) {
             case 0: {
-                if(short_press==1) {   //into mode 1
+                if(short_press==1) {                          //into mode 1
                     mode = 1;
                     enable_timer();
-                } else if(reg_B&0xE4) {//into mode 2
+                } else if(reg_B&0xE4 && batv > charge_th[0]) {//into mode 2
                     mode = 2;
                     enable_timer();
-                } else {               //in mode 0
+                } else {                                      //in mode 0
                     disable_timer();
                 }
                 P1OUT &= (~0x08);
                 light_leds(mode, 0);
+                clear_avg();
                 break;
             }
 
@@ -534,32 +593,32 @@ int main(void)
                     mode = 0;
                 } else {
                     P1OUT &= (~0x08);           //in mode 1
-                    light_leds(mode, (reg_E&0x7F)*20 + 2304);
+                    light_leds(mode, batv);
                 }
                 break;
             }
 
             case 2: {
-                if((reg_B&0xE4) == 0) {                 //into mode 0
+                if((reg_B&0xE4) == 0) {                                                       //into mode 0
                     mode = 0;
                 } else if(long_press==1 && ((reg_B&0xE0) == 0x20 ||
-                        (reg_B&0xE0) == 0x40)) {        //into mode 3
+                        (reg_B&0xE0) == 0x40) || (((reg_B&0xE0)==0)&&(reg_B&0x04)) ) {        //into mode 3
                     mode=3;
                 } else {
-                    P1OUT &= (~0x08);                   //in mode 2
-                    light_leds(mode, (reg_E&0x7F)*20 + 2304);
+                    P1OUT &= (~0x08);                                                         //in mode 2
+                    light_leds(mode, batv);
                 }
                 break;
             }
 
             case 3: {
-                if((reg_B&0xE4) == 0) {     //into mode 0
+                if((reg_B&0xE4) == 0 || batv < discharge_th[0]) {     //into mode 0
                     mode = 0;
-                } else if(long_press==1) {     //into mode 2
+                } else if(long_press==1) {                            //into mode 2
                     mode=2;
                 } else {
-                    P1OUT |= 0x08;          //in mode 3
-                    light_leds(mode, (reg_E&0x7F)*20 + 2304);
+                    P1OUT |= 0x08;                                    //in mode 3
+                    light_leds(mode, batv);
                 }
                 break;
             }
