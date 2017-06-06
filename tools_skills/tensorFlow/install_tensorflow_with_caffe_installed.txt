@@ -1,0 +1,108 @@
+
+
+
+pip install
+---------------
+https://www.tensorflow.org/versions/r0.12/get_started/os_setup.html#installing-from-sources
+export TF_BINARY_URL=https://storage.googleapis.com/tensorflow/linux/gpu/tensorflow_gpu-0.12.0rc1-cp27-none-linux_x86_64.whl
+
+
+
+sudo pip install tensorflow_gpu-1.head-cp27-none-linux_x86_64.whl
+
+
+
+
+
+源码编译安装
+---------------
+https://www.tensorflow.org/versions/r0.12/get_started/os_setup.html#installing-from-sources
+
+
+
+
+
+
+本小节的安装方法适合对 TensorFlow 做定制的场景。
+下载源码
+
+
+$ git clone --recurse-submodules https://github.com/tensorflow/tensorflow
+
+
+
+
+jdk8的安装。
+#
+#（2.1）下载jdk文件
+#
+#下载对应版本的jdk文件，网址为www.oracle.com/technetwork/cn/java/javase/downloads/jdk8-downloads-2133151-zhs.html
+#
+#（2.2）创建目标路径文件夹
+#
+#sudo mkdir /usr/lib/jvm
+#
+#（2.3）解压
+#
+#sudo tar zxvf jdk-8u111-linux-x64.tar.gz  -C /usr/lib/jvm
+#
+#（2.4）修改环境变量
+#
+#sudo vim ~/.bashrc
+#
+#在文件末尾加上：
+#
+#export JAVA_HOME=/usr/lib/jvm/jdk1.8.0_111（这里根据实际情况更改）
+#
+#export JRE_HOME=${JAVA_HOME}/jre  
+#
+#export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib  
+#
+#export PATH=${JAVA_HOME}/bin:$PATH
+#（2.5）使环境变量马上生效：
+#
+#source ～/.bashrc
+#
+#(2.6)测试jdk
+#
+#java -version
+
+
+
+
+
+安装 Bazel
+
+参考 http://bazel.io/docs/install.html
+# 1. Add Bazel distribution URI as a package source (one time setup)
+# 
+# echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+# curl https://bazel.build/bazel-release.pub.gpg | sudo apt-key add -
+# 
+# If you want to install the testing version of Bazel, replace stable with testing.
+# 2. Install and update Bazel
+# 
+# sudo apt-get update && sudo apt-get install bazel
+# 
+# Once installed, you can upgrade to a newer version of Bazel with:
+# 
+# sudo apt-get upgrade bazel
+
+
+配置
+$ ./configure
+根据你的实际情况如实回答一系列问题。回答之后 bazel 会对环境进行配置，此时需要机器可以访问外网，便于获取一些编译依赖包。一些包可能需要翻墙。
+编译
+
+仅 CPU 支持，无 GPU 支持：
+$ bazel build -c opt //tensorflow/tools/pip_package:build_pip_package
+有 GPU 支持：
+$ bazel build -c opt --config=cuda //tensorflow/tools/pip_package:build_pip_package
+- 生成 pip 安装包
+$ bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg
+- 使用 PIP 工具安装
+$ pip install /tmp/tensorflow_pkg/tensorflow-x.x.x-py2-none-linux_x86_64.whl
+源码安装的优缺点
+
+优点：灵活定制，可按需增加新特性
+缺点：门槛高，配置编译环境耗时较长
