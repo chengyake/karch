@@ -77,6 +77,14 @@
 	cmake ..
 	make --jobs=4
 
+ps: ~/.bashrc
+export CAFFE_ROOT=~/caffe
+export DIGITS_ROOT=~/DIGITS
+export PATH=$PATH:/home/gisdom/caffe/build/tools
+export PYTHONPATH=~/caffe/python
+
+import caffe
+caffe.__version__
 
 
 17.下载digits
