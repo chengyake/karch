@@ -393,7 +393,8 @@ void init_bq2589x() {
     write_bq2589x(0x08, v&(~0x03));
 
 
-    //write_bq2589x(0x0D, 0x80);            //some how?? 0xFF
+    write_bq2589x(0x04, 0x40);            //Max-Current 4096 mA
+    //write_bq2589x(0x0D, 0x80);          //some how?? 0xFF
 
 }
 
