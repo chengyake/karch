@@ -1,0 +1,1 @@
+gcc ctrl.c  ctrl-gen.c  device.c  diag.c  example.c  frame.c   init.c  misc.c  stream.c  -I./include -I./include/libuvc -I/home/yake/project/libusb_install/include -L/home/yake/project/libusb_install/lib -lusb-1.0 -lpthread -o test

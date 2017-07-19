@@ -16,6 +16,8 @@ void cb(uvc_frame_t *frame, void *ptr) {
   }
 
   /* Do the BGR conversion */
+/*
+  delete by yake
   ret = uvc_any2bgr(frame, bgr);
   if (ret) {
     uvc_perror(ret, "uvc_any2bgr");
@@ -23,6 +25,7 @@ void cb(uvc_frame_t *frame, void *ptr) {
     return;
   }
 
+*/
   /* Call a user function:
    *
    * my_type *my_obj = (*my_type) ptr;
@@ -109,10 +112,10 @@ int main(int argc, char **argv) {
       if (res < 0) {
         uvc_perror(res, "get_mode"); /* device doesn't provide a matching stream */
       } else {
-        /* Start the video stream in isochronous mode. The library will
-         * call user function cb: cb(frame, (void*) 12345)
+        /* Start the video stream. The library will call user function cb:
+         *   cb(frame, (void*) 12345)
          */
-        res = uvc_start_iso_streaming(devh, &ctrl, cb, 12345);
+        res = uvc_start_streaming(devh, &ctrl, cb, 12345, 0);
 
         if (res < 0) {
           uvc_perror(res, "start_streaming"); /* unable to start stream */

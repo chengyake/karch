@@ -11,25 +11,13 @@
 #include <string.h>
 #include <pthread.h>
 #include <signal.h>
-#include "utilbase.h"
+#include <libusb-1.0/libusb.h>
 #include "utlist.h"
 
-//#define UVC_DEBUGGING
-
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
-/** Converts an unaligned 8-byte little-endian integer into an int64 */
-#define QW_TO_LONG(p) \
- ((p)[0] | ((p)[1] << 8) | ((p)[2] << 16) | ((p)[3] << 24) \
-  | ((uint64_t)(p)[4] << 32) | ((uint64_t)(p)[5] << 40) \
-  | ((uint64_t)(p)[6] << 48) | ((uint64_t)(p)[7] << 56))
 /** Converts an unaligned four-byte little-endian integer into an int32 */
 #define DW_TO_INT(p) ((p)[0] | ((p)[1] << 8) | ((p)[2] << 16) | ((p)[3] << 24))
-/** Converts an unaligned four-byte little-endian integer into an signed int32 */
 /** Converts an unaligned two-byte little-endian integer into an int16 */
 #define SW_TO_SHORT(p) ((p)[0] | ((p)[1] << 8))
-/** Converts an unaligned two-byte little-endian integer into an int16 as a signed value */
 /** Converts an int16 into an unaligned two-byte little-endian integer */
 #define SHORT_TO_SW(s, p) \
   (p)[0] = (s); \
@@ -40,17 +28,6 @@
   (p)[1] = (i) >> 8; \
   (p)[2] = (i) >> 16; \
   (p)[3] = (i) >> 24;
-/** Converts an int64 into an unaligned 8-byte little-endian integer */
-#define LONG_TO_QW(i, p) \
-  (p)[0] = (i); \
-  (p)[1] = (i) >> 8; \
-  (p)[2] = (i) >> 16; \
-  (p)[3] = (i) >> 24; \
-  (p)[4] = (i) >> 32; \
-  (p)[5] = (i) >> 40; \
-  (p)[6] = (i) >> 48; \
-  (p)[7] = (i) >> 56;
-
 
 /** Selects the nth item in a doubly linked list. n=-1 selects the last item. */
 #define DL_NTH(head, out, n) \
@@ -73,22 +50,15 @@
 
 #ifdef UVC_DEBUGGING
 #include <libgen.h>
-#ifdef __ANDROID__	// add for android saki@sereneginat
-	#define UVC_DEBUG(...) LOGD(__VA_ARGS__)
-	#define UVC_ENTER() LOGD("[%s:%d] begin %s", basename(__FILE__), __LINE__, __FUNCTION__)
-	#define UVC_EXIT(code) LOGD("[%s:%d] end %s (%d)", basename(__FILE__), __LINE__, __FUNCTION__, code)
-	#define UVC_EXIT_VOID() LOGD("[%s:%d] end %s", basename(__FILE__), __LINE__, __FUNCTION__)
+#define UVC_DEBUG(format, ...) fprintf(stderr, "[%s:%d/%s] " format "\n", basename(__FILE__), __LINE__, __FUNCTION__, ##__VA_ARGS__)
+#define UVC_ENTER() fprintf(stderr, "[%s:%d] begin %s\n", basename(__FILE__), __LINE__, __FUNCTION__)
+#define UVC_EXIT(code) fprintf(stderr, "[%s:%d] end %s (%d)\n", basename(__FILE__), __LINE__, __FUNCTION__, code)
+#define UVC_EXIT_VOID() fprintf(stderr, "[%s:%d] end %s\n", basename(__FILE__), __LINE__, __FUNCTION__)
 #else
-	#define UVC_DEBUG(format, ...) fprintf(stderr, "[%s:%d/%s] " format "\n", basename(__FILE__), __LINE__, __FUNCTION__, ##__VA_ARGS__)
-	#define UVC_ENTER() fprintf(stderr, "[%s:%d] begin %s\n", basename(__FILE__), __LINE__, __FUNCTION__)
-	#define UVC_EXIT(code) fprintf(stderr, "[%s:%d] end %s (%d)\n", basename(__FILE__), __LINE__, __FUNCTION__, code)
-	#define UVC_EXIT_VOID() fprintf(stderr, "[%s:%d] end %s\n", basename(__FILE__), __LINE__, __FUNCTION__)
-#endif
-#else
-	#define UVC_DEBUG(...)
-	#define UVC_ENTER()
-	#define UVC_EXIT(code)
-	#define UVC_EXIT_VOID()
+#define UVC_DEBUG(format, ...)
+#define UVC_ENTER()
+#define UVC_EXIT_VOID()
+#define UVC_EXIT(code)
 #endif
 
 /* http://stackoverflow.com/questions/19452971/array-size-macro-that-rejects-pointers */
@@ -202,21 +172,18 @@ typedef struct uvc_streaming_interface {
   /** USB endpoint to use when communicating with this interface */
   uint8_t bEndpointAddress;
   uint8_t bTerminalLink;
-  uint8_t bmInfo;	// XXX
-  uint8_t bStillCaptureMethod;	// XXX
-  uint8_t bTriggerSupport;	// XXX
-  uint8_t bTriggerUsage;	// XXX
-  uint64_t *bmaControls;	// XXX
 } uvc_streaming_interface_t;
 
 /** VideoControl interface */
 typedef struct uvc_control_interface {
   struct uvc_device_info *parent;
   struct uvc_input_terminal *input_term_descs;
-  struct uvc_output_terminal *output_term_descs;
+  // struct uvc_output_terminal *output_term_descs;
+  struct uvc_selector_unit *selector_unit_descs;
   struct uvc_processing_unit *processing_unit_descs;
   struct uvc_extension_unit *extension_unit_descs;
   uint16_t bcdUVC;
+  uint32_t dwClockFrequency;
   uint8_t bEndpointAddress;
   /** Interface number */
   uint8_t bInterfaceNumber;
@@ -247,7 +214,7 @@ typedef struct uvc_device_info {
   We could/should change this to allow reduce it to, say, 5 by default
   and then allow the user to change the number of buffers as required.
  */
-#define LIBUVC_NUM_TRANSFER_BUFS 10
+#define LIBUVC_NUM_TRANSFER_BUFS 100
 
 #define LIBUVC_XFER_BUF_SIZE	( 16 * 1024 * 1024 )
 
@@ -261,15 +228,13 @@ struct uvc_stream_handle {
   /** Current control block */
   struct uvc_stream_ctrl cur_ctrl;
 
-  /* listeners may only access hold*, and only when holding a 
+  /* listeners may only access hold*, and only when holding a
    * lock on cb_mutex (probably signaled with cb_cond) */
-  uint8_t bfh_err, hold_bfh_err;	// XXX added to keep UVC_STREAM_ERR
   uint8_t fid;
   uint32_t seq, hold_seq;
   uint32_t pts, hold_pts;
   uint32_t last_scr, hold_last_scr;
   size_t got_bytes, hold_bytes;
-  size_t size_buf;	// XXX add for boundary check
   uint8_t *outbuf, *holdbuf;
   pthread_mutex_t cb_mutex;
   pthread_cond_t cb_cond;
@@ -294,7 +259,6 @@ struct uvc_device_handle {
   libusb_device_handle *usb_devh;
   struct uvc_device_info *info;
   struct libusb_transfer *status_xfer;
-  pthread_mutex_t status_mutex;	// XXX saki
   uint8_t status_buf[32];
   /** Function to call when we receive status updates from the camera */
   uvc_status_callback_t *status_cb;
@@ -306,19 +270,18 @@ struct uvc_device_handle {
   uvc_stream_handle_t *streams;
   /** Whether the camera is an iSight that sends one header per frame */
   uint8_t is_isight;
-  uint8_t reset_on_release_if;	// XXX whether interface alt setting needs to reset to 0.
 };
 
 /** Context within which we communicate with devices */
 struct uvc_context {
   /** Underlying context for USB communication */
   struct libusb_context *usb_ctx;
-  /** True if libuvc initialized the underlying USB context */
+  /** True iff libuvc initialized the underlying USB context */
   uint8_t own_usb_ctx;
   /** List of open devices in this context */
   uvc_device_handle_t *open_devices;
   pthread_t handler_thread;
-  uint8_t kill_handler_thread;
+  int kill_handler_thread;
 };
 
 uvc_error_t uvc_query_stream_ctrl(
