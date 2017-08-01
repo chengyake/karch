@@ -59,7 +59,7 @@ with tf.device('/gpu:0'):
     h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
     keep_prob = tf.placeholder(tf.float32)
     h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
-    print('fc 1: {0}'.format(h_fc1.shape))
+    print('fc 1: {0}'.format(y_conv.shape))
 
     # fc2
     W_fc2 = weight_variable([1024, 10])
