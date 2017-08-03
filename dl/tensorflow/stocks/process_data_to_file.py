@@ -93,9 +93,9 @@ def fill_all_data():
 def fill_all_data2():
 
     global bat2, batch2
-    for s in range(totalnum):
+    for s in range(100, totalnum):
         for d in range(width+1, onelines-1):  #onelines - (onelines-1) -> latest y
-            fill_data(s, d)
+            fill_data2(s, d)
             if bat2 >= batch2:
                 return bat2
    
