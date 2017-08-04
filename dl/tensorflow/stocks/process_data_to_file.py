@@ -52,12 +52,12 @@ def fill_data(idx, offset):
     for h in range(1, height):
         x_train[bat, :, h, :] = x_train[bat, :, 0, :]
 
-    y = get_percent(idx, offset)
+    _a, y, _b, _c = get_percent(idx, offset)
     if y > 0.1:
         y=0.1
     if y < -0.1:
         y=-0.1
-    y_train[bat] = y*127+128
+    y_train[bat] = y*10*127+128
     bat=bat+1
 
 
@@ -72,12 +72,12 @@ def fill_data2(idx, offset):
     for h in range(1, height):
         x_test[bat2, :, h, :] = x_test[bat2, :, 0, :]
 
-    y = get_percent(idx, offset)
+    _a, y, _b, _c = get_percent(idx, offset)
     if y > 0.1:
         y=0.1
     if y < -0.1:
         y=-0.1
-    y_test[bat2] = y*127+128
+    y_test[bat2] = y*10*127+128
     bat2=bat2+1
 
 
@@ -93,7 +93,7 @@ def fill_all_data():
 def fill_all_data2():
 
     global bat2, batch2
-    for s in range(100, totalnum):
+    for s in range(3300, totalnum):
         for d in range(width+1, onelines-1):  #onelines - (onelines-1) -> latest y
             fill_data2(s, d)
             if bat2 >= batch2:
@@ -122,3 +122,8 @@ def main():
 
 
 main()
+
+
+
+
+
