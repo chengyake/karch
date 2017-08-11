@@ -42,7 +42,9 @@ void cb(uvc_frame_t *frame, void *ptr) {
   IplImage* cvImg;
 
   printf("callback! length = %u, ptr = %d\n", frame->data_bytes, (int) ptr);
-
+  if(frame->data_bytes<614400) {//640x480
+      return;
+  }
   bgr = uvc_allocate_frame(frame->width * frame->height * 3);
   if (!bgr) {
     printf("unable to allocate bgr frame!");
