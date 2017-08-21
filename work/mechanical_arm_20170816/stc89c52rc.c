@@ -1,5 +1,4 @@
-#include "stc.h"
-
+#include <STC89C5xRC.H>
 
 //100kHz, min width=4us
 
@@ -8,8 +7,8 @@
 //10cm/2mm = 50Round = 10000Hz = 100us
 //理论精度 0.0005mm
 
-sbit clk=p2^0;
-sbit dir=p2^1;
+sbit clk=P2^0;
+sbit dir=P2^1;
 
 
 void delay_us(unsigned char i){
@@ -34,6 +33,8 @@ void UARTInit(void) //定义串口初始化函数
     T2CON=0x34; //由T/C2 作为波特率发生器
     RCAP2L=0xD9; //波特率为9600 的低8 位
     RCAP2H=0xFF; //波特率为9600 的高8 位
+    ES = 1;
+    EA = 1;
 }
 
 void UARTSendByte(unsigned char byte)//串口发送单字节函数
@@ -43,21 +44,27 @@ void UARTSendByte(unsigned char byte)//串口发送单字节函数
     TI=0; //清零发送完成标志位
 }
 
+void UartIRQ(void) interrupt 4
+{
+    unsigned char recv;
+    if(RI) {
+        recv = SBUF;
+        RI = 0;
+        UARTSendByte(recv); //串口发送单字节数据
+        //Delay(); //延时500ms
+    }
+
+}
 
 void main(void) //进入Main 函数
 {
 
-    p2=0xFF;    //init all high
+    //P2=0xFF;    //init all high
 
-    unsigned char recv;
     UARTInit(); //串口初始化
     while(1) //进入死循环
     {
-        if(RI) {
-            recv = SBUF;
-            UARTSendByte(recv); //串口发送单字节数据
-            Delay(); //延时500ms
-        }
+        Delay(); //延时500ms
     }
 }
 

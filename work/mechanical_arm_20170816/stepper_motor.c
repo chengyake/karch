@@ -1,10 +1,6 @@
 #include "stc.h"
 
-
 //1 cmd buffer; no buffer for ctrl cmd
-
-
-
 
 //100kHz, min width=4us
 //200clk = 1Round = 2mm
@@ -17,21 +13,11 @@
     1:begin to recev
     5:recv all, need check
     6:check over, run
-
-
-
 */
 
 
-
-
-
-
-
-
-
-sbit clk=p2^0;
-sbit dir=p2^1;
+sbit clk=P2^0;
+sbit dir=P2^1;
 
 unsigned char recv, us, step;
 unsigned char clk_num, clk_all;
@@ -67,6 +53,7 @@ void recv_cmd() {
     
     if(RI) {
         recv = SBUF;
+        RI = 0;
         if((recv == 0xFF || recv == 0xFE) && c == 0) {
             cmd[0] = recv;
             dir = cmd[0]:0;
@@ -79,10 +66,9 @@ void recv_cmd() {
 }
 
 
-
 void main(void) {
 
-    p2=0xFF;    //init all high
+    P2=0xFF;    //init all high
     UARTInit(); 
     while(1) {    
 
