@@ -1,5 +1,10 @@
 #include "stc.h"
 
+//test version
+
+
+
+
 //1 cmd buffer; no buffer for ctrl cmd
 
 //100kHz, min width=4us
@@ -66,8 +71,8 @@ void delay_ms(unsigned short t) { //ms
 void UARTInit(void) {
     SCON =0x50; //8bit data, allow recv
     T2CON=0x34; //T/C2 clk generator
-    RCAP2L=0xD9; //9600 L 8bit
-    RCAP2H=0xFF; //9600 H 8bit
+    RCAP2L=0xD9;//9600 L 8bit
+    RCAP2H=0xFF;//9600 H 8bit
     ES = 1;
     EA = 1;
 }
@@ -134,7 +139,7 @@ void main(void) {
 }
 
 
-void UartIRQ(void) interrupt    4 
+void UartIRQ(void) interrupt    4
 {
 
     if(RI) {
