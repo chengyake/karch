@@ -3,6 +3,21 @@
 
 /*
 
+                main
+                 |
+                 |
+                 |
+                 |              switch clk    //(mini interval 100us)
+                 ------------->    and
+                 |             reload timer
+       --------->|
+       |         V
+       |     recv bytes
+       |    process cmds
+       |  calc next delay us
+       |         |
+       -----------
+
 mode : run/suspend
 
 Frame:
@@ -62,29 +77,19 @@ struct cmd_s {
     unsigned int stop_steps;
 }cmds[6];
 
+unsigned char need_switch[6];
+
 unsigned char mode;
 unsigned char recv_buff[28];
 unsigned char recv_counter=0;
 
-
-void delay_us(unsigned short t) {
-    while(--t);
-}
-
-
-void delay_ms(unsigned short t) { //ms
-    while(--t) {
-        delay_us(990);
-    }
-}
+unsigned short timer_us;
 
 void UARTInit(void) {
     SCON =0x50; //8bit data, allow recv
     T2CON=0x34; //T/C2 clk generator
     RCAP2L=0xD9;//9600 L 8bit
     RCAP2H=0xFF;//9600 H 8bit
-    ES = 1;
-    EA = 1;
 }
 
 void UARTSendByte(unsigned char byte) {
@@ -97,6 +102,13 @@ void StpperInit(void) {
 
     P1 = 0xFF;
     P2 = 0xFF;
+}
+
+void init_timer(void) {
+    TMOD = 0x01;
+    ET0 = 0x01;
+    EA = 0;
+    TR0 = 0;        //if 1: run T/C0 
 }
 
 
@@ -148,67 +160,12 @@ void main(void) {
 }
 
 
-void load_cmd_from_buff(void) {
-
-
-}
-
-void UartIRQ(void) interrupt    4
+void Timer0IRQ interrupt 1 
 {
-
-    if(RI) {
-        recv = SBUF;
-        if(recv == 0xEC && recv_counter == 0) {
-            recv_counter = 1;
-
-        } else if(recv_counter == 1) {
-            recv_conter = 2;
-            recv_buff[recv_counter-2] = recv;
-            if(recv == 0x55) {
-                recv_max = 28;
-            } else if(recv == 0xFF || recv == 0x00) {
-                recv_max = 2;
-            } else {
-                recv_max = 0;
-                recv_counter = 0;
-                UARTSendByte(XORE);
-            }
-        } else if (recv_counter > 1 && recv_conter < recv_max) {
-            recv_counter++;
-            recv_buff[recv_conter-2] = recv;
-            if(recv_conter > recv_max) {
-                
-            }
-        }
-
-        RI = 0;
-    }
+    TH0 = (65535-timer_us)/256;
+    TL0 = (65535-timer_us)%256;
+    
 
 
 }
-
-
-
-
-
-
-
-
-//和氏璧
-//C-Arm
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

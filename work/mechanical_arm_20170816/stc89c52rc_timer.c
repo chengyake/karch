@@ -2,7 +2,7 @@
 
 unsigned char i = 0;
 
-short timer_us;
+unsigned short timer_us;
 
 void init_timer(void) {
     TMOD = 0x01;
