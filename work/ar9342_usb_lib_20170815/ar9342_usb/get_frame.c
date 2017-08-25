@@ -106,7 +106,7 @@ int fill_buffer_with_file(unsigned char *file, unsigned char *data) {
 
 int init_display() {
 
-    img=cvCreateImage(cvSize(512,256), IPL_DEPTH_16U,1);
+    img=cvCreateImage(cvSize(512,256), IPL_DEPTH_16S,1);
     cvNamedWindow("Image:",1);
     return 0;
 }
@@ -116,7 +116,7 @@ int display(char *data) {
     short *dp = (short *)(img->imageData);
     memcpy(img->imageData, (char *)data, 512*256*2);
     cvShowImage("Image:",img);
-    //cvWaitKey(10);
+    cvWaitKey(10);
     return 0;
 }
 
@@ -321,7 +321,7 @@ int init_fpga() {
         l = fill_buffer_with_file(fpga_file[i], &data[0]);
         if(l <= 0) return -1;
         write_data(&data[0], l);
-
+#if 0
         //compare
         write_cmd(WRITE_ENABLE_COMMAND, 0x0001);
         data[0] = 0x06;
@@ -339,11 +339,37 @@ int init_fpga() {
                 exit(-1);
             }
         }
+#endif
     }
+    return 0;
+}
+
+
+
+
+int set_params(unsigned char reg, unsigned char value) {
+
+    unsigned char data[512]; 
+    write_cmd(WRITE_ENABLE_COMMAND, 0x0001);
+    data[0] = reg;
+    data[1] = value;
+    write_data(&data[0], 2);
 
     return 0;
 }
 
+
+int init_params() {
+    
+    set_params(0x0C, 1);
+    set_params(0x0D, 4);
+    set_params(0x0E, 9);
+    set_params(0x0F, 20);
+    set_params(0x10, 30);
+    set_params(0x12, 100);
+
+    return 0;
+}
 
 #if 1
 int set_run(int run) {
@@ -353,9 +379,6 @@ int set_run(int run) {
     data[0] = 0x07;
     data[1] = (run==0 ? 1 : 0); //0 run: 1 frizze
     write_data(&data[0], 2);
-
-
-
 
     return 0;
 }
@@ -392,71 +415,34 @@ int set_run(int run) {
 #endif
 
 int get_data() {
-    static int counter = 0;
     int i, l;
     unsigned char tmp[51200]; 
     unsigned char data[512*256*2]={0}; 
-#if 1
-    for(i=0; i<2000; i++) {
-        write_cmd(0xb3, 0x0003);
-        read_data(&data[0], 1536);
-        printf("------get frame %d--------p%d\n", l, data[1026+4]);
-
-
-        write_cmd(0xb3, 0x0000);
-        l = read_data(&data[0], 1536);
-        printf("------get frame %d--------\n", l);
-        l = read_data(&data[0], 51184+16);
-        printf("------get frame %d--------\n", l);
-        l = read_data(&data[0], 496+16);
-        printf("------get frame %d--------\n", l);
-
-    }
-#else
-
-
-
-    for(i=0; i<2000; i++) {
+    printf("start loop frame data p1\n");
+    for(i=0; i<20000; i++) {
         write_cmd(READ_ENABLE_COMMAND, 0x0003);
         l = read_data(&tmp[0], 512*3);
-        printf("------get frame %d--------p%d\n", l, tmp[1026+4]);
+        printf("------get frame %d--------p%d  %d\n", l, tmp[1026+4], i);
 
         write_cmd(READ_ENABLE_COMMAND, 0x0000);
 
         if(tmp[1026+4] == 1) {
             l = read_data(&tmp[0], 512*3);
             printf("------get frame %d--------\n", l);
-            memcpy(data, &tmp[1026], l-1026); 
-            counter+=l-1026;
+            memcpy(data, &tmp[1026], 510);
 
-            l = read_data(&tmp[0], 51200);
+            l = read_data(&data[510], 512*511);
             printf("------get frame %d--------\n", l);
-            memcpy(data, &tmp[1026], l); 
-            counter+=l;
 
             l = read_data(&tmp[0], 512);
             printf("------get frame %d--------\n", l);
-            memcpy(data, &tmp[1026], l); 
-            counter+=l;
+            data[512*512-2] = tmp[0];
+            data[512*512-1] = tmp[1];
 
-            if(counter>=512*256*2) {
-                //display(&data[0]);
-                printf("---display--one--frame---\n");
-                counter=0;
-            }
-        } else {
-            l = read_data(&tmp[0], 512*3);
-            printf("------get frame %d--------\n", l);
-            l = read_data(&tmp[0], 51200);
-            printf("------get frame %d--------\n", l);
-            l = read_data(&tmp[0], 512);
-            printf("------get frame %d--------\n", l);
-
+            display(&data[0]);
+            //printf("---display--one--frame---\n");
         }
-
-
     }
-#endif
 }
 
 int main() {
@@ -468,17 +454,17 @@ int main() {
 
     download_firmware();
 
-
     init_afe();
 
     init_fpga();
     
+    init_params();
+
     init_display();
 
-    set_run(0);
     set_run(1);
-    get_data();
 
+    get_data();
 
     close_usb();
     close_display();
