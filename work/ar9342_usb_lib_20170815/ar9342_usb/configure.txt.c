@@ -1,3 +1,15 @@
+       
+       0x0C 1
+       0x0E 4
+       0x0D 9
+       0x0F 20
+       0x10 30
+       0x12 100
+       
+       
+       
+       
+       
        image = 0        usb port 6
 controlparam = 1        usb port 0
    tabledata = 2
@@ -28,9 +40,6 @@ bool ccyusbbase::write(byte nport, const byte* pbuffer, ulong ulcount)
     ::leavecriticalsection(&m_cs);
     return bres;
 }
-
-
-
 
 
 //2¡¢³õÊ¼»¯FPGA
@@ -70,7 +79,7 @@ BOOL CCyUsbBase::Write(BYTE nPort, const BYTE* pBuffer, ULONG ulCount)
 	if(this->WriteCommand(WRITE_ENABLE_COMMAND, nPort))
 	{
 		bRes = this->WriteData(pBuffer, ulCount);
-	}	
+	}
 	::LeaveCriticalSection(&m_cs);
 	return bRes;
 }
