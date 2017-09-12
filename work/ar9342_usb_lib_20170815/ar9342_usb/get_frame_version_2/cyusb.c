@@ -444,7 +444,7 @@ int get_frame(unsigned char *data, int size) {
     int ret_time=-ETIME;
     unsigned char tmp[512*3]; 
      
-    if(dev_state<0) {return dev_state;}
+    if(dev_state<1) {return -1;}
     if(data == NULL || size < FRAME_SIZE) {return -EINVAL;}
 
     DEBUG("start loop frame data p1\n");
