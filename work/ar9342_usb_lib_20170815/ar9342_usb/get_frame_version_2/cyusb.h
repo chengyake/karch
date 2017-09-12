@@ -24,7 +24,7 @@
 int open_usb(int vid, int pid);
 void close_usb();
 
-int download_firmware();
+int download_firmware(char *fw);
 int init_afe();
 int init_fpga();
 int init_params();

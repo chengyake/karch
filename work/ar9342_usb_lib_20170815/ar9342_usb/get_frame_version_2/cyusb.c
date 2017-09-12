@@ -295,7 +295,7 @@ int set_run(int run) {
 	ret = write_ctrl_2(0x07, (unsigned char*)&cbRun, sizeof(cbRun));
 	if(ret < 0) return ret;
 
-	dev_state = cbRun;
+	dev_state = run;
 }
 
 int is_run() {
