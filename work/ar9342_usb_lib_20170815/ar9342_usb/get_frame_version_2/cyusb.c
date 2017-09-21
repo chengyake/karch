@@ -341,7 +341,7 @@ int get_depth(int index) {
 
 int set_depth(int index) {   
     int ret;
-	unsigned char ratio = 5;
+	unsigned char ratio = index+3;
     if(dev_state<0) {return dev_state;}
 	return write_ctrl_2(0x0E, (unsigned char*)&ratio, sizeof(ratio));
 }
