@@ -34,7 +34,7 @@ def split_video_to_images(video, name_index, target_path, target_fmt):
         print"Either file is missing or is not readable"
         return
     
-    cmdstr = "mkdir .tmp && ffmpeg -i %s -f image2 %s/%%8d%s" % (video, target_path, target_fmt)
+    cmdstr = "mkdir .tmp && ffmpeg -i %s -f image2 .tmp/%%8d%s" % (video, target_fmt)
     os.system(cmdstr)
     
     l = get_file_list(".bmp", ".tmp")
