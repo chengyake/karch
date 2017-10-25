@@ -9,10 +9,22 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageFilter
 
   
+def get_file_list(fmt, d):
+    'add all fmt file in d to l'
+    l=[]
+    if not (os.path.exists(d)):
+        print "folder %s is missing" % d
+        return
+    for path, dirname, files in os.walk(d):
+        for filename in files:
+            if filename.find(fmt)!=-1:
+                l.append(path+"/"+filename)
+    return l
 
-def detect_xy_range(pathname):
 
-    im = Image.open(pathname).convert("L")
+
+def detect_xy_box(im):
+
 
 #    k5 = (0.0, 0.0, -2.0, 0.0, 0.0,
 #         0.0, 0.0, -2.0, 0.0, 0.0,
@@ -62,12 +74,47 @@ def detect_xy_range(pathname):
     if wmax_right < 90000 or hmax_left < 110000:
         return None
 
-    return x1, x2, y1, y2 
+    return x1, y1, x2, y2 
 
 
 
 
 #print detect_xy_range("/home/yake/Desktop/yake37.bmp")
+
+
+def crop_trs(path, fmt, to)
+l =  get_file_list(fmt, path)
+index=0
+for i in l:
+    im = Image.open(i).convert("L")
+    box = detect_xy_box(im)
+    if box != None:
+        region = im.crop(box)
+        region.save("%s/%08d.bmp" % (to, index))
+        index+=1
+
+
+crop("/home/yake/Desktop/trs_crop", ".bmp", "/home/yake/Desktop/crop/"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
