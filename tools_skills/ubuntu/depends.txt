@@ -1,0 +1,24 @@
+
+这里需要注意一下dist-upgrade和upgrade的区别。
+
+dist-upgrade会比较灵活地处理包的依赖关系，
+而upgrade则不会，如果依赖包出了问题，upgrade会停止更新。
+
+sudo apt-get update  
+sudo apt-get dist-upgrade  
+sudo apt-get -f dist-upgrade  
+sudo apt-get install --reinstall software-center 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
