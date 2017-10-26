@@ -1,0 +1,6 @@
+１.查看virtualbox安装记录 
+pdkg -l | grep virtualbox 
+2.全部卸载带有virtualbox的软件 
+sudo pdkg -r <名字> 
+3.重新安装从官网下载的新版本，这样保证没有版本冲突 
+sudo pdkg -i virtualbox-5.1_5.1.18-114002-Ubuntu-xenial_amd64.deb

@@ -1,0 +1,5 @@
+
+gnome-screenshot 
+
+-w 参数来捕捉当前 Shell 窗口
+-a 参数来捕捉指定区域
