@@ -21,7 +21,18 @@ def get_file_list(fmt, d):
                 l.append(path+"/"+filename)
     return l
 
+# > 200  ; normally 4000
+def detect_red_pixels(pathname, th=8.0):
 
+    im = Image.open(pathname).convert("RGB")
+    w, h = im.size
+    s=0
+    for i in range(0, w):
+          for j in range(0, h):
+                r, g, b = im.getpixel((i, j))
+                if r/(g+b+1) > th:
+                    s+=1
+    return s
 
 def detect_xy_box(im):
 
@@ -82,19 +93,21 @@ def detect_xy_box(im):
 #print detect_xy_range("/home/yake/Desktop/yake37.bmp")
 
 
-def crop_trs(path, fmt, to)
-l =  get_file_list(fmt, path)
-index=0
-for i in l:
-    im = Image.open(i).convert("L")
-    box = detect_xy_box(im)
-    if box != None:
-        region = im.crop(box)
-        region.save("%s/%08d.bmp" % (to, index))
-        index+=1
+def crop_trs(path, fmt, to):
+    l =  get_file_list(fmt, path)
+    index=0
+    for i in l:
+        if detect_red_pixels(i) < 200:
+            im = Image.open(i).convert("L")
+            box = detect_xy_box(im)
+            if box != None:
+                region = im.crop(box)
+                region.save("%s/%08d.bmp" % (to, index))
+                index+=1
+    return
+    
 
-
-crop("/home/yake/Desktop/trs_crop", ".bmp", "/home/yake/Desktop/crop/"
+crop_trs("/home/yake/images_register/trs_img", ".bmp", "/home/yake/images_register/trs_crop")
 
 
 
