@@ -53,7 +53,7 @@ def crop_trs(path, fmt, to):
     
 
 
-crop_trs("/home/yake/images_register/mu1_img", ".png", "/home/yake/images_register/mu1_crop")
+crop_trs("./mu1_img", ".png", "./mu1_crop")
 
 
 

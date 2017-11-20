@@ -107,7 +107,7 @@ def crop_trs(path, fmt, to):
     return
     
 
-crop_trs("/home/yake/images_register/trs_img", ".bmp", "/home/yake/images_register/trs_crop")
+crop_trs("./trs_img", ".bmp", "./trs_crop")
 
 
 
