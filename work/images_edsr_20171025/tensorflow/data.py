@@ -1,6 +1,7 @@
 import scipy.misc
 import numpy as np
 import random
+from PIL import Image
 import os
 
 mu1_set = []
@@ -66,25 +67,31 @@ returns x,y where:
 	-y is the target set of shape [-1,original_size,original_size,channels]
 """
 def get_batch(batch_size,original_size,shrunk_size):
-	x =[]
-	y =[]
-	global mu1_set, trs_set
-	img_indices = random.sample(range(80),batch_size)
-	for i in range(len(img_indices)):
-		index = img_indices[i]
-		img = scipy.misc.imread(mu1_set[index])
-		img = crop_center(img,original_size,original_size)
-		x_img = scipy.misc.imresize(img,(shrunk_size,shrunk_size))
-		x.append(x_img)
+    x =[]
+    y =[]
+    global mu1_set, trs_set
+    img_indices = random.sample(range(80),batch_size)
 
-		img = scipy.misc.imread(trs_set[index])
-		img = crop_center(img,original_size,original_size)
-		y.append(img)
-	x = np.array(x)
-	x = x.reshape(x.shape+(1,))
-	y = np.array(y)
-	y = y.reshape(y.shape+(1,))
-	return x,y
+    for i in range(len(img_indices)):
+        rx = random.randint(0, 50000)
+        ry = random.randint(0, 50000)
+        rr = random.randint(0, 3)
+        rm = random.randint(0, 1)
+    
+        index = img_indices[i]
+        img = scipy.misc.imread(mu1_set[index])
+        img = crop_var_img(img,original_size,original_size, rx, ry, rr, rm)
+        x_img = scipy.misc.imresize(img,(shrunk_size,shrunk_size))
+        x.append(x_img)
+        
+        img = scipy.misc.imread(trs_set[index])
+        img = crop_var_img(img,original_size,original_size, rx, ry, rr, rm)
+        y.append(img)
+    x = np.array(x)
+    x = x.reshape(x.shape+(1,))
+    y = np.array(y)
+    y = y.reshape(y.shape+(1,))
+    return x,y
 
 """
 Simple method to crop center of image
@@ -99,6 +106,30 @@ def crop_center(img,cropx,cropy):
 	startx = x//2-(cropx//2)
 	starty = y//2-(cropy//2)    
 	return img[starty:starty+cropy,startx:startx+cropx]
+
+"""
+rx:  random x aixs
+ry:  random y aixs
+rr:  rotate 0, 90, 180, 270
+rm:  mirror
+"""
+def crop_var_img(img,cropx,cropy, rx, ry, rr, rm):
+    y,x = img.shape
+    if x<cropx or y<cropy:
+        return np.zeros((cropy, cropx), dtype=np.uint8)
+
+    startx = rx%(x-cropx+1)
+    starty = ry%(y-cropy+1)
+    im = img[starty:starty+cropy,startx:startx+cropx]
+    
+    #if rm%2 == 1:
+    #    im = im.transpose(Image.FLIP_LEFT_RIGHT)
+    #im = im.rotate((rr%4)*90)
+    
+    return im
+
+
+
 
 
 def get_file_list(fmt, d):
