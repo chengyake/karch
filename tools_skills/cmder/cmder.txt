@@ -1,3 +1,6 @@
+综合cmder， busybox， gvim， choco等，构成类似linux环境
+
+
 1. 下载安装cmder的full版本
 
 2. 绿色按照目录中，右键创建快捷方式，在快捷方式上右键输入快捷键，Ctrl+Alt+T
