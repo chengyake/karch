@@ -1,0 +1,24 @@
+1. 下载安装cmder的full版本
+
+2. 绿色按照目录中，右键创建快捷方式，在快捷方式上右键输入快捷键，Ctrl+Alt+T
+
+3. 配置settings中startup的tasks，修改默认启动路径，cmd /k "%ConEmuDir%\..\init.bat"  -new_console:d:E:\
+
+4. 修改keys&macro中修改新建tab，最大最小等快捷键
+
+5. 替换find命令
+
+6. 拷贝vimrc.local到家目录，即默认启动目录，重命名为.vimrc
+
+7.
+安装gvim并添加环境变量，然后下载taglist的包，拷贝到.vim/plugin和doc下。不使用默认的vim
+
+8. 安装 @powershell -NoProfile -ExecutionPolicy unrestricted -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolat ey\bin
+
+9. 安装ctags
+
+10. ssh-keygen -C 'email@e.com' -t rsa
+
+
+10. install python
+
