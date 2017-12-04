@@ -23,5 +23,6 @@
 10. ssh-keygen -C 'email@e.com' -t rsa
 
 
-10. install python
+10. install python; pip install plugins
+
 
