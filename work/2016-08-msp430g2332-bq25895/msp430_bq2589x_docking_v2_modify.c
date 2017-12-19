@@ -387,6 +387,7 @@ void init_bq2589x() {
 
 
     write_bq2589x(0x04, 0x40);            //Max-Current 4096 mA
+    write_bq2589x(0x05, 0x22);            //pre-charge 128mA, Iterm 128mA
     //write_bq2589x(0x0D, 0x80);          //some how?? 0xFF
 
 
