@@ -259,6 +259,7 @@ void Setup_USI_Master_RX ()
 }
 
 unsigned char write_bq2589x(unsigned char r, unsigned char v) {
+
     unsigned char j;
     reg = r;
     value_w = v;
@@ -271,10 +272,12 @@ unsigned char write_bq2589x(unsigned char r, unsigned char v) {
         if(Success==1) return 0;
     }
     __delay_cycles(20000);
+
     return 1;
 }
 
 unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
+
     unsigned char j;
     reg = r;
     value_r = v;
@@ -287,6 +290,7 @@ unsigned char read_bq2589x(unsigned char r, unsigned char *v) {
         if(Success==1) return 0;
     }
     __delay_cycles(20000);
+
     return 1;
 }
 
@@ -322,7 +326,7 @@ void disable_timer() {
  */
 static unsigned char stage1=0; stage2=0;
 void set_leds_mode(unsigned short batv, unsigned char flash_times, unsigned char iscomplate) {
-    
+
     unsigned char old_led = led;
 
     stage2=stage1;
@@ -333,22 +337,23 @@ void set_leds_mode(unsigned short batv, unsigned char flash_times, unsigned char
         led1=0x00;
         return;
     }
-    
+
     if (batv<=2304 || flash_times==0) {//no battery or error
         led=0x0F;
         led1=0x0F;
         return;
     }
-    
+
     if(stage2==0x00 && stage1==0x01) {
         flash_once_on=3;
     }
 
     if(flash_once_on!=0 || flash_times==0xFF) {
         led=0x07; led1=0x0F;                    //0 on, 1 flash
-        if(batv > 3800) {led=0x06;led1=0x07;}   //1 on, 2 flash
-        if(batv > 4000) {led=0x01;led1=0x06;}   //2 on, 3 flash
+        if(batv > 3800) {led=0x05;led1=0x07;}   //1 on, 2 flash
+        if(batv > 4000) {led=0x01;led1=0x05;}   //2 on, 3 flash
         if(batv > 4200) {led=0x00;led1=0x01;}   //3 on, 4 flash
+        if(flash_once_on!=0) {led1=0x0F;}
     } else {
         led=0x0F;
         led1=0x0F;
@@ -396,17 +401,22 @@ void register_reset() {
 }
 
 unsigned char get_charge_stage(unsigned char regb) {
-        switch (regb&0x18) {
-            case 0x00:
-                return 0;
-            case 0x18:
-                return 2;
-            default:
-                return 1;
-        }
-        return 0;
+    switch (regb&0x18) {
+        case 0x00:
+            return 0;
+        case 0x18:
+            return 2;
+        default:
+            return 1;
+    }
+    return 0;
 }
 
+static unsigned short avg1=0, avg2=0;
+
+unsigned short batv=0;
+unsigned char reg_B=0, reg_C=0, reg_E=0, reg_12;
+unsigned char powergood, batgood, stage;
 /*
  * P2.5        INT BQ
  * P1.6-P1.7   I2C
@@ -414,9 +424,6 @@ unsigned char get_charge_stage(unsigned char regb) {
  */
 int main(void)
 {
-    unsigned short batv=0;
-    unsigned char reg_B=0, reg_C=0, reg_E=0;
-    unsigned char powergood, batgood, stage;
 
 
     WDTCTL = WDTPW + WDTHOLD;                 // Stop watchdog
@@ -445,26 +452,30 @@ int main(void)
 
     while(1) {
 #ifdef LS_DEBUG
-    //debug:dump all register
-    unsigned char i;
-    for(i=sizeof(regs); i>0; i--) {
-        read_bq2589x(i-1, &regs[i-1]);
-    }
+        //debug:dump all register
+        unsigned char i;
+        for(i=sizeof(regs); i>0; i--) {
+            read_bq2589x(i-1, &regs[i-1]);
+        }
 #endif
 
         read_bq2589x(0x0B, &reg_B);
         read_bq2589x(0x0C, &reg_C);
         read_bq2589x(0x0E, &reg_E);
-        batv = (reg_E&0x7F)*20 + 2304;
+        read_bq2589x(0x12, &reg_12);
 
-       powergood=((reg_B&0x04)==0) ? 0 : 1;
-       batgood = batv==2304 ? 0 : 1;
-       stage = get_charge_stage(reg_B);
+        //batv = (reg_E&0x7F)*20 + 2304;//-(reg_12*45/10));
+        batv = ((reg_E&0x7F)*20 + 2304);
+        batv = (batv - (reg_12<<2) - (reg_12>>1));
+
+        powergood=((reg_B&0x04)==0) ? 0 : 1;
+        batgood = batv==2304 ? 0 : 1;
+        stage = get_charge_stage(reg_B);
 
         if(powergood && batgood) {
             if(stage==0) {
                 set_leds_mode(batv, 0, 0);
-            } else if(stage==2){
+            } else if(stage==2) {
                 set_leds_mode(batv, 0xFF, 1);
             } else {
                 set_leds_mode(batv, 0xFF, 0);
