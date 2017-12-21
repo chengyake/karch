@@ -1,6 +1,7 @@
 #include <msp430.h>
 
 
+
 /*
  * 2017-12-18
  * rules:
@@ -387,7 +388,7 @@ void init_bq2589x() {
 
 
     write_bq2589x(0x04, 0x40);            //Max-Current 4096 mA
-    write_bq2589x(0x05, 0x22);            //pre-charge 128mA, Iterm 128mA
+    //write_bq2589x(0x05, 0x22);            //pre-charge 128mA, Iterm 128mA
     //write_bq2589x(0x0D, 0x80);          //some how?? 0xFF
 
 
@@ -412,10 +413,11 @@ unsigned char get_charge_stage(unsigned char regb) {
     }
 }
 
-unsigned short get_max_batv(unsigned short batv) {
+unsigned short get_max_batv(unsigned short batv, unsigned char clear) {
     static unsigned short maxv=0;
-    if(batv==2304) {
+    if(clear || batv<=2304) {
         maxv=0;
+        return maxv;
     }
     if(maxv<batv) {
         maxv = batv;
@@ -481,7 +483,7 @@ int main(void)
         batgood = batv==2304 ? 0 : 1;
         stage = get_charge_stage(reg_B);
 
-        batv = get_max_batv(batv);
+        batv = get_max_batv(batv, reg_C&0x01);
         
 
         if(powergood && batgood) {
