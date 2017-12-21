@@ -410,10 +410,18 @@ unsigned char get_charge_stage(unsigned char regb) {
         default:
             return 1;
     }
-    return 0;
 }
 
-static unsigned short avg1=0, avg2=0;
+unsigned short get_max_batv(unsigned short batv) {
+    static unsigned short maxv=0;
+    if(batv==2304) {
+        maxv=0;
+    }
+    if(maxv<batv) {
+        maxv = batv;
+    }
+    return maxv;
+}
 
 unsigned short batv=0;
 unsigned char reg_B=0, reg_C=0, reg_E=0, reg_12;
@@ -472,6 +480,9 @@ int main(void)
         powergood=((reg_B&0x04)==0) ? 0 : 1;
         batgood = batv==2304 ? 0 : 1;
         stage = get_charge_stage(reg_B);
+
+        batv = get_max_batv(batv);
+        
 
         if(powergood && batgood) {
             if(stage==0) {
