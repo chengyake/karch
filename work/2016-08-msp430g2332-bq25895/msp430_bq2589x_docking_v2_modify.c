@@ -1,4 +1,3 @@
-
 #include <msp430.h>
 
 
@@ -326,9 +325,10 @@ void disable_timer() {
  * on:4, f,5    all on
  *
  */
-static unsigned char stage1=0; stage2=0;
+
 void set_leds_mode(unsigned short batv, unsigned char flash_times, unsigned char iscomplate) {
 
+    static unsigned char stage1=0, stage2=0;
     unsigned char old_led = led;
 
     stage2=stage1;
@@ -374,7 +374,7 @@ void init_bq2589x() {
 
     write_bq2589x(0x02, 0xFD);//start 1Hz ADC
     //write_bq2589x(0x06, 0x82);//voltage limit 4.352V = 3.840 + 0.512
-    write_bq2589x(0x06, 0x8A);//voltage limit 4.384V = 3.840 + 0.512 + 0.032
+    write_bq2589x(0x06, 0x9A);//voltage limit 4.448V = 3.840 + 0.512 + 0.032 + 0.064
 
     //disable wdog and stat pin
     read_bq2589x(0x07, &v);
