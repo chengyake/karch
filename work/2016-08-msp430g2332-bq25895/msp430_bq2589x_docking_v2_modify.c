@@ -373,8 +373,8 @@ void init_bq2589x() {
     unsigned char v;
 
     write_bq2589x(0x02, 0xFD);//start 1Hz ADC
-    //write_bq2589x(0x06, 0x82);//voltage limit 4.352V = 3.840 + 0.512
-    write_bq2589x(0x06, 0x9A);//voltage limit 4.448V = 3.840 + 0.512 + 0.032 + 0.064
+    write_bq2589x(0x06, 0x82);//voltage limit 4.352V = 3.840 + 0.512
+    //write_bq2589x(0x06, 0x9A);//voltage limit 4.448V = 3.840 + 0.512 + 0.032 + 0.064
 
     //disable wdog and stat pin
     read_bq2589x(0x07, &v);
