@@ -416,15 +416,34 @@ unsigned char get_charge_stage(unsigned char regb) {
 }
 
 unsigned short get_max_batv(unsigned short batv, unsigned char clear) {
-    static unsigned short maxv=0;
+    unsigned char i, j=0;
+    unsigned int sum=0;
+    static unsigned short avg[8]={0};
     if(clear || batv<=2304) {
-        maxv=0;
-        return maxv;
+        memset(avg, 0, 16);
+        return 0;
     }
-    if(maxv<batv) {
-        maxv = batv;
+
+    if(batv!=avg[0]) {
+        avg[7]=avg[6];
+        avg[6]=avg[5];
+        avg[5]=avg[4];
+        avg[4]=avg[3];
+        avg[3]=avg[2];
+        avg[2]=avg[1];
+        avg[1]=avg[0];
+        avg[0]=batv;
     }
-    return maxv;
+
+    for(i=0; i<8; i++) {
+        if(avg[i]!=0) {
+            sum+=avg[i];
+            j++;
+        }
+
+    }
+
+    return sum/j;
 }
 
 unsigned short batv=0;
@@ -462,6 +481,8 @@ int main(void)
 
     init_bq2589x();
     enable_timer();
+
+
 
     while(1) {
 #ifdef LS_DEBUG
