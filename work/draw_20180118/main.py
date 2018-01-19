@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from PIL import Image, ImageFilter
 
@@ -92,20 +93,41 @@ def CalcPixelBelong(rp,gp,bp):
     return r0,g0,b0
 
 
-im = Image.open("./cat.jpg")
-im=im.filter(ImageFilter.GaussianBlur(radius=2))  
-w,h=im.size
-for i in range(w):
-    for j in range(h):
-        r,g,b=im.getpixel((i,j))
-        r,g,b=CalcPixelBelong(r,g,b)
-        im.putpixel((i,j), (r,g,b))
+
+def process_image(f):
+    image = Image.open("./view/"+f)
+    im=image.filter(ImageFilter.GaussianBlur(radius=4))
+    w,h=im.size
+    for i in range(w):
+        for j in range(h):
+            r,g,b=im.getpixel((i,j))
+            r,g,b=CalcPixelBelong(r,g,b)
+            im.putpixel((i,j), (r,g,b))
+    
+    im= im.filter(ImageFilter.CONTOUR)
+    
+    im.save(f+"line_color.jpg")
+    
+    im_gray=im.convert("L")
+    
+    for i in range(w):
+        for j in range(h):
+            if im_gray.getpixel((i,j)) < 250:
+                im.putpixel((i,j), (0, 0, 0))
+                image.putpixel((i,j), (0,0,0))
+            else:
+                im.putpixel((i,j), (255,255,255))
+    
+    
+    image.save(f+"f_color.jpg")
+    im.save(f+"_edge.jpg")
 
 
 
+ll = os.listdir("view")
 
-im.show()
-
+for a in ll:
+    process_image(a)
 
 
 
