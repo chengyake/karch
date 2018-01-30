@@ -1,14 +1,13 @@
 import tensorflow as tf  
 import numpy as np
 import random
-import time
 import csv
 import os
 
 train_num = 5000
 val_num = 642
 learning_rate = 0.01
-iterations = 100
+iterations = 1000*10
 batch_size = 5000
 
 
@@ -139,8 +138,7 @@ def train_once(loss=1.6):
 all_mini_loss=10.0
 
 for i in range(10000):
-    all_mini_loss = train_once(all_mini_loss)
-    time.sleep(1)
+    all_mini_loss = train_once(all_mini_loss)   
 
 
 
