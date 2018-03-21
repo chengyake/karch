@@ -19,11 +19,11 @@ import numpy as np
 '''
 
 # color b g r
-r_lower = np.array([100, 75, 178], dtype=np.uint8)
-r_upper = np.array([130, 104, 200], dtype=np.uint8)
+r_lower = np.array([6, 3, 60], dtype=np.uint8)
+r_upper = np.array([40, 53, 255], dtype=np.uint8)
 
-b_lower = np.array([120, 0, 0], dtype=np.uint8)
-b_upper = np.array([255, 120, 120], dtype=np.uint8)
+b_lower = np.array([0, 50, 25], dtype=np.uint8)
+b_upper = np.array([30, 140, 80], dtype=np.uint8)
 
 
 
@@ -44,8 +44,8 @@ def calc_center(gray):
     y = 0
     rnpxy= np.sum(gray)
     
-    if rnpxy < 10*255:
-        return 0, 0
+    #if rnpxy < 10*255:
+    #    return 0, 0
 
     rnpx = np.sum(gray, axis=0)
     rnpy = np.sum(gray, axis=1)
@@ -119,6 +119,7 @@ camera = cv2.VideoCapture(0)
 for i in range(60):
     ret, frame = camera.read()
     #frame = cv2.GaussianBlur(frame, (11,11), 0)
+    frame = cv2.flip(frame, 1)
     cv2.imshow('Camera-View',frame)
     k = cv2.waitKey(30) & 0xff
     if k == 27:
@@ -128,6 +129,7 @@ while camera.isOpened():
     ret, frame = camera.read()
     #frame = cv2.bilateralFilter(frame, 5, 50, 100)  # smoothing filter
     #frame = cv2.GaussianBlur(frame, (11,11), 0)
+    frame = cv2.flip(frame, 1)
     frame = removeBG(frame)
     
     mask = cv2.inRange(frame, r_lower, r_upper)  
