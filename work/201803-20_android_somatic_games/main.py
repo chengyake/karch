@@ -9,6 +9,9 @@ import numpy as np
 #import random
 
 
+
+
+
 '''
 1. get diff frame  frome background
 2. get r and b color
@@ -16,14 +19,19 @@ import numpy as np
 4. filter x and y
 5. contral android
 
+lsusb
+
+lsusb -d xxxx: -v
+
+
 '''
 
 # color b g r
-r_lower = np.array([6, 3, 60], dtype=np.uint8)
-r_upper = np.array([40, 53, 255], dtype=np.uint8)
+r_lower = np.array([0, 3, 60], dtype=np.uint8)
+r_upper = np.array([60, 53, 255], dtype=np.uint8)
 
-b_lower = np.array([0, 50, 25], dtype=np.uint8)
-b_upper = np.array([30, 140, 80], dtype=np.uint8)
+b_lower = np.array([0, 40, 0], dtype=np.uint8)
+b_upper = np.array([80, 255, 40], dtype=np.uint8)
 
 
 
@@ -113,6 +121,8 @@ def filter_b(x,y):
 
 # Camera
 camera = cv2.VideoCapture(0)
+#camera.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH,800)  
+#camera.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT,600)  
 #camera.set(10,200)
 
 #delay
@@ -125,31 +135,46 @@ for i in range(60):
     if k == 27:
         break
 bgModel = cv2.BackgroundSubtractorMOG2(0, 50)
+counter=0
+print "------start-------"
 while camera.isOpened():
+    counter+=1
+    print counter
     ret, frame = camera.read()
     #frame = cv2.bilateralFilter(frame, 5, 50, 100)  # smoothing filter
     #frame = cv2.GaussianBlur(frame, (11,11), 0)
     frame = cv2.flip(frame, 1)
     frame = removeBG(frame)
     
+    #color mask
     mask = cv2.inRange(frame, r_lower, r_upper)  
     r_frame = cv2.bitwise_and(frame, frame, mask = mask)  
-    r_gray = cv2.cvtColor(r_frame, cv2.COLOR_BGR2GRAY)
-
     mask = cv2.inRange(frame, b_lower, b_upper)  
     b_frame = cv2.bitwise_and(frame, frame, mask = mask)  
-    b_gray = cv2.cvtColor(b_frame, cv2.COLOR_BGR2GRAY)
+
+    #filter R/(B+G) > 2.4
+    r_frame[r_frame[:,:,2]/(r_frame[:,:,0]+r_frame[:,:,1]+1.0)<2.4]=(0,0,0)
+    b_frame[b_frame[:,:,1]/(b_frame[:,:,0]+b_frame[:,:,2]+1.0)<1.0]=(0,0,0)
     
+    #convert BGR to Gray
+    r_gray = cv2.cvtColor(r_frame, cv2.COLOR_BGR2GRAY)
+    b_gray = cv2.cvtColor(b_frame, cv2.COLOR_BGR2GRAY)
+
+    #calc center
     rx, ry = calc_center(r_gray)
     bx, by = calc_center(b_gray)
+    #filter x y
     rx, ry = filter_r(rx, ry)
     bx, by = filter_b(bx, by)
-
-    cv2.line(r_gray, (rx, 0), (rx, 470), 255) 
-    cv2.line(r_gray, (0, ry), (470, ry), 255) 
-    cv2.line(b_gray, (bx, 0), (bx, 470), 255) 
-    cv2.line(b_gray, (0, by), (470, by), 255) 
-
+    
+    #draw line   
+    if rx!=0 or ry!=0:
+        cv2.line(frame, (rx, 0), (rx, 480), (0,0,255))
+        cv2.line(frame, (0, ry), (640, ry), (0,0,255))
+    if bx!=0 or by!=0:
+        cv2.line(frame, (bx, 0), (bx, 480), (0,255,0))
+        cv2.line(frame, (0, by), (640, by), (0,255,0))
+    #show photo
     cv2.imshow('Camera-View', frame)
     cv2.imshow('r-View', r_gray)
     cv2.imshow('b-View', b_gray)
