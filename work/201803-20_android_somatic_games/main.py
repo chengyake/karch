@@ -24,23 +24,35 @@ lsusb
 lsusb -d xxxx: -v
 
 
+# skin color:
+# define the upper and lower boundaries of the HSV pixel
+# intensities to be considered 'skin'
+lower = np.array([0, 48, 80], dtype = "uint8")
+upper = np.array([20, 255, 255], dtype = "uint8")
+
+
+# define the upper and lower boundaries of the HSV pixel
+# intensities to be considered 'skin'
+lower = np.array([0, 48, 80], dtype = "uint8")
+upper = np.array([20, 255, 255], dtype = "uint8")
+
+
 '''
 
-# color b g r
-r_lower = np.array([0, 3, 60], dtype=np.uint8)
-r_upper = np.array([60, 53, 255], dtype=np.uint8)
 
-b_lower = np.array([0, 40, 0], dtype=np.uint8)
-b_upper = np.array([80, 255, 40], dtype=np.uint8)
 
+#red
+r_lower = np.array([175, 210, 80], dtype = "uint8")
+r_upper = np.array([180, 240, 230], dtype = "uint8")
+
+#green
+b_lower = np.array([66, 184, 47], dtype = "uint8")
+b_upper = np.array([77, 250, 166], dtype = "uint8")
 
 
 
 def removeBG(frame):
     fgmask = bgModel.apply(frame)
-    # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    # res = cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel)
-
     kernel = np.ones((3, 3), np.uint8)
     fgmask = cv2.erode(fgmask, kernel, iterations=1)
     res = cv2.bitwise_and(frame, frame, mask=fgmask)
@@ -134,7 +146,8 @@ for i in range(60):
     k = cv2.waitKey(30) & 0xff
     if k == 27:
         break
-bgModel = cv2.BackgroundSubtractorMOG2(0, 50)
+#bgModel = cv2.BackgroundSubtractorMOG2(10, 50, True) #frames for bg trains; threshold; detectshadow?
+bgModel = cv2.BackgroundSubtractorMOG2(20, 50, True)
 counter=0
 print "------start-------"
 while camera.isOpened():
@@ -145,16 +158,19 @@ while camera.isOpened():
     #frame = cv2.GaussianBlur(frame, (11,11), 0)
     frame = cv2.flip(frame, 1)
     frame = removeBG(frame)
-    
+
     #color mask
-    mask = cv2.inRange(frame, r_lower, r_upper)  
+    converted = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(converted, r_lower, r_upper)  
+    mask = cv2.GaussianBlur(mask, (3, 3), 0)
     r_frame = cv2.bitwise_and(frame, frame, mask = mask)  
-    mask = cv2.inRange(frame, b_lower, b_upper)  
+    mask = cv2.inRange(converted, b_lower, b_upper)  
+    mask = cv2.GaussianBlur(mask, (3, 3), 0)
     b_frame = cv2.bitwise_and(frame, frame, mask = mask)  
 
     #filter R/(B+G) > 2.4
-    r_frame[r_frame[:,:,2]/(r_frame[:,:,0]+r_frame[:,:,1]+1.0)<2.4]=(0,0,0)
-    b_frame[b_frame[:,:,1]/(b_frame[:,:,0]+b_frame[:,:,2]+1.0)<1.0]=(0,0,0)
+    #r_frame[r_frame[:,:,2]/(r_frame[:,:,0]+r_frame[:,:,1]+1.0)<2.4]=(0,0,0)
+    #b_frame[b_frame[:,:,1]/(b_frame[:,:,0]+b_frame[:,:,2]+1.0)<1.0]=(0,0,0)
     
     #convert BGR to Gray
     r_gray = cv2.cvtColor(r_frame, cv2.COLOR_BGR2GRAY)
@@ -192,24 +208,42 @@ def onMove(x, y):
 def onRelease(x, y):
     return
 
-switch=0
-def ontouch(x, y):
-    global switch
+switch_1=0
+def ontouch_r(x, y):
+    global switch_1
     if (x,y) != (0, 0):
-        if switch==0:
+        if switch_1==0:
             onPress(x,y)
-            switch=1
+            switch_1=1
         else:
             onMove(x,y)
     else:
-        if switch!=0:
+        if switch_1!=0:
             onRelease(x, y)
-            switch=0
+            switch_1=0
         else:
             pass
 
     return
 
+
+switch_2=0
+def ontouch_b(x, y):
+    global switch_2
+    if (x,y) != (0, 0):
+        if switch_2==0:
+            onPress(x,y)
+            switch_2=1
+        else:
+            onMove(x,y)
+    else:
+        if switch_2!=0:
+            onRelease(x, y)
+            switch_2=0
+        else:
+            pass
+
+    return
 
 
 
