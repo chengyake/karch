@@ -1,20 +1,64 @@
 #!/usr/bin/python
 import sys
+import time
 import socket       
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
 s.connect(('192.168.50.118', 12345))
+
+def touchDown(i, x,y):
+    if i == 0:
+        s.send("r\n")
+        time.sleep(0.1)
+
+    print("d %d %d %d 50\n" % (i, x, y))
+    s.send("d %d %d %d 50\n" %(i, x, y))
+    s.send("c\n")
+    return
+
+def touchMove(i, x,y):
+    print("m %d %d %d 50\n" %(i, x, y))
+    s.send("m %d %d %d 50\n" %(i, x, y))
+    s.send("c\n")
+    return
+
+def touchUp(i):
+    print("u %d\n" % i)
+    s.send("u %d\n" % i)
+    s.send("c\n")
+    return
+
+
+
+
+
 print("connect success~")
-print(s.recv(1024))
-print(s.recv(1024))
-print(s.recv(1024))
+time.sleep(0.3)
+#print(s.recv(30))
+#print(s.recv(160))
+#print(s.recv(60))
 
 
-touchDown(200,200)
-for i in range(200, 500, 5):
-    touchMove(i,i)
-touchUp(500,500)
+
+for z in range(100):
+    
+
+    name = input("Please intput your name:")
+    
+
+    touchDown(0, 200,200)
+    touchDown(1, 600,400)
+    for i in range(201, 500, 10):
+        time.sleep(0.01)
+        touchMove(0, i, i)
+        touchMove(1, i+400,i+200)
+    time.sleep(0.01)
+    touchUp(0)
+    time.sleep(0.1)
+    touchUp(1)
+
+
+
 
 s.close() 
 
@@ -23,15 +67,3 @@ s.close()
 
 
 
-
-def touchDown(x,y):
-    s.send("d 0 %d %d 50\n" % x, y)
-    return
-
-def touchMove(x,y):
-    s.send("m 0 %d %d 50\n" % x, y)
-    return
-
-def touchUp(x,y):
-    s.send("u 0\n")
-    return

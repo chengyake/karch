@@ -678,14 +678,14 @@ static void io_handler(FILE* input, FILE* output, internal_state_t* state)
   setvbuf(output, NULL, _IOLBF, 1024);
 
   // Tell version
-  fprintf(output, "v %d\n", VERSION);
+  //fprintf(output, "v %d\n", VERSION);
 
   // Tell limits
-  fprintf(output, "^ %d %d %d %d\n",
-          state->max_contacts, state->max_x, state->max_y, state->max_pressure);
+  //fprintf(output, "^ %d %d %d %d\n",
+  //        state->max_contacts, state->max_x, state->max_y, state->max_pressure);
 
   // Tell pid
-  fprintf(output, "$ %d\n", getpid());
+  //fprintf(output, "$ %d\n", getpid());
 
   char read_buffer[80];
 
