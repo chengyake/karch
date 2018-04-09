@@ -1,5 +1,7 @@
 import cv2
 import os
+import time
+import copy
 import numpy as np
 
 #import pyscreenshot as ImageGrab
@@ -9,193 +11,170 @@ import numpy as np
 #import random
 
 
+W=640
+H=480
+
+lower = np.array([0, 40, 70], dtype = "uint8")
+upper = np.array([30, 255, 255], dtype = "uint8")
+
+
+class Circle:
+
+    def __init__(self, name, position, r):
+        self.name = name
+        self.position = position
+        self.mask = np.zeros((H, W, 3), dtype="uint8")
+        self.r = r
+        cv2.circle(self.mask, position, r, (255,255,255), -1)
+        self.trigger=False
+
+    def get_mask(self):
+        return self.mask
+
+    def is_trigger(self, f):
+        frame=copy.deepcopy(f)
+        frame[self.mask==0]=0
+        frame[frame!=0]=1
+        s = np.sum(frame)
+        if s > self.r*self.r/2:
+            self.trigger=True
+        if s < self.r*self.r/3:
+            self.trigger=False
+        return self.trigger
+
+    def add_button_to_view(self, frame):
+        if self.trigger:
+            frame[self.mask==255]=255
+        else:
+            frame[self.mask==255]=0
+        return frame
+
+
+class Button:
+
+    def __init__(self, name, position, r):
+        self.name = name
+        self.position = position
+        self.mask = np.zeros((H, W, 3), dtype="uint8")
+        self.r = r
+        cv2.circle(self.mask, position, r, (255,255,255), -1)
+        self.trigger=False
+
+    def get_mask(self):
+        return self.mask
+
+    def is_trigger(self, f):
+        frame=copy.deepcopy(f)
+        frame[self.mask==0]=0
+        frame[frame!=0]=1
+        s = np.sum(frame)
+        if s > self.r*self.r/2:
+            self.trigger=True
+        if s < self.r*self.r/3:
+            self.trigger=False
+        return self.trigger
+
+    def add_button_to_view(self, frame):
+        if self.trigger:
+            frame[self.mask==255]=255
+        else:
+            frame[self.mask==255]=0
+        return frame
+
+        
+
+class Camera:
+    def __init__(self):
+        self.frames=0
+        self.camera = cv2.VideoCapture(0)
+        self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH,W)  
+        self.camera.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT,H)  
+
+    def frame_counter(self):
+        self.frames+=1
+        print("frames: %d" % self.frames)
+
+    def is_opened(self):
+        return self.camera.isOpened()
+
+    def stable_dur(self):
+        for i in range(60):
+            _, f = self.camera.read()
+            f = cv2.flip(f, 1)
+            cv2.imshow('Camera-View',f)
+            k = cv2.waitKey(30) & 0xff
+            if k == 27:
+                print("user Esc")
+                exit(0)
+                break
+        
+
+    def set_bg(self):
+        self.bgModel = cv2.BackgroundSubtractorMOG2(0, 50)
+
+    def remove_bg(self, frame):
+        fgmask = self.bgModel.apply(frame)
+        kernel = np.ones((3, 3), np.uint8)
+        fgmask = cv2.erode(fgmask, kernel, iterations=1)
+        res = cv2.bitwise_and(frame, frame, mask=fgmask)
+        return res
+
+    def get_frame(self):
+        _, f = self.camera.read()
+        f = cv2.flip(f, 1)
+        return f
 
 
 
-'''
-1. get diff frame  frome background
-2. get r and b color
-3. calc r and b center
-4. filter x and y
-5. contral android
 
-lsusb
+camera = Camera()
 
-lsusb -d xxxx: -v
+if not camera.is_opened():
+    print("camera is not opened or unconnected")
+    exit(0)
 
+camera.stable_dur()
+camera.set_bg()
 
-# skin color:
-# define the upper and lower boundaries of the HSV pixel
-# intensities to be considered 'skin'
-lower = np.array([0, 48, 80], dtype = "uint8")
-upper = np.array([20, 255, 255], dtype = "uint8")
-
-
-# define the upper and lower boundaries of the HSV pixel
-# intensities to be considered 'skin'
-lower = np.array([0, 48, 80], dtype = "uint8")
-upper = np.array([20, 255, 255], dtype = "uint8")
-
-
-'''
-
-
-
-#red
-r_lower = np.array([175, 210, 80], dtype = "uint8")
-r_upper = np.array([180, 240, 230], dtype = "uint8")
-
-#green
-b_lower = np.array([66, 184, 47], dtype = "uint8")
-b_upper = np.array([77, 250, 166], dtype = "uint8")
-
-
-
-def removeBG(frame):
-    fgmask = bgModel.apply(frame)
-    kernel = np.ones((3, 3), np.uint8)
-    fgmask = cv2.erode(fgmask, kernel, iterations=1)
-    res = cv2.bitwise_and(frame, frame, mask=fgmask)
-    return res
-
-
-def calc_center(gray):
-    x = 0
-    y = 0
-    rnpxy= np.sum(gray)
+while camera.is_opened():
     
-    #if rnpxy < 10*255:
-    #    return 0, 0
+    camera.frame_counter()
+    frame = camera.get_frame()
+    org_frame = copy.deepcopy(frame)
+    frame = camera.remove_bg(frame)
 
-    rnpx = np.sum(gray, axis=0)
-    rnpy = np.sum(gray, axis=1)
-    
-    linesum=0
-    idx=0;
-    for i in rnpx:
-        if linesum >= rnpxy/2:
-            x = idx
-            break
-        linesum+=i
-        idx+=1
-
-
-    linesum=0
-    idx=0;
-    for i in rnpy:
-        if linesum >= rnpxy/2:
-            y = idx
-            break
-        linesum+=i
-        idx+=1
-
-    return x, y
-
-
-
-rl=[(0,0),(0,0),(0,0)]
-bl=[(0,0),(0,0),(0,0)]
-def filter_r(x,y):
-    global rl
-    rl.append((x,y))
-    rl.pop(0)
-    nznum = 3-rl.count((0,0))
-
-    if nznum == 0:
-        return 0, 0
-    
-    xsum=0
-    ysum=0
-    for a,b in rl:
-        xsum+=a
-        ysum+=b
-    
-    return xsum/nznum, ysum/nznum
-
-
-def filter_b(x,y):
-    global bl
-    bl.append((x,y))
-    bl.pop(0)
-    nznum = 3-bl.count((0,0))
-
-    if nznum == 0:
-        return 0, 0
-    
-    xsum=0
-    ysum=0
-    for a,b in bl:
-        xsum+=a
-        ysum+=b
-    
-    return xsum/nznum, ysum/nznum
-
-
-# Camera
-camera = cv2.VideoCapture(0)
-#camera.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH,800)  
-#camera.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT,600)  
-#camera.set(10,200)
-
-#delay
-for i in range(60):
-    ret, frame = camera.read()
-    #frame = cv2.GaussianBlur(frame, (11,11), 0)
-    frame = cv2.flip(frame, 1)
-    cv2.imshow('Camera-View',frame)
-    k = cv2.waitKey(30) & 0xff
-    if k == 27:
-        break
-#bgModel = cv2.BackgroundSubtractorMOG2(10, 50, True) #frames for bg trains; threshold; detectshadow?
-bgModel = cv2.BackgroundSubtractorMOG2(20, 50, True)
-counter=0
-print "------start-------"
-while camera.isOpened():
-    counter+=1
-    print counter
-    ret, frame = camera.read()
-    #frame = cv2.bilateralFilter(frame, 5, 50, 100)  # smoothing filter
-    #frame = cv2.GaussianBlur(frame, (11,11), 0)
-    frame = cv2.flip(frame, 1)
-    frame = removeBG(frame)
-
-    #color mask
+    #skin mask
     converted = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(converted, r_lower, r_upper)  
-    mask = cv2.GaussianBlur(mask, (3, 3), 0)
-    r_frame = cv2.bitwise_and(frame, frame, mask = mask)  
-    mask = cv2.inRange(converted, b_lower, b_upper)  
-    mask = cv2.GaussianBlur(mask, (3, 3), 0)
-    b_frame = cv2.bitwise_and(frame, frame, mask = mask)  
+    mask = cv2.inRange(converted, lower, upper)  
+    #mask = cv2.GaussianBlur(mask, (3, 3), 0)
+    frame = cv2.bitwise_and(frame, frame, mask = mask)  
 
-    #filter R/(B+G) > 2.4
-    #r_frame[r_frame[:,:,2]/(r_frame[:,:,0]+r_frame[:,:,1]+1.0)<2.4]=(0,0,0)
-    #b_frame[b_frame[:,:,1]/(b_frame[:,:,0]+b_frame[:,:,2]+1.0)<1.0]=(0,0,0)
-    
-    #convert BGR to Gray
-    r_gray = cv2.cvtColor(r_frame, cv2.COLOR_BGR2GRAY)
-    b_gray = cv2.cvtColor(b_frame, cv2.COLOR_BGR2GRAY)
 
-    #calc center
-    rx, ry = calc_center(r_gray)
-    bx, by = calc_center(b_gray)
-    #filter x y
-    rx, ry = filter_r(rx, ry)
-    bx, by = filter_b(bx, by)
-    
-    #draw line   
-    if rx!=0 or ry!=0:
-        cv2.line(frame, (rx, 0), (rx, 480), (0,0,255))
-        cv2.line(frame, (0, ry), (640, ry), (0,0,255))
-    if bx!=0 or by!=0:
-        cv2.line(frame, (bx, 0), (bx, 480), (0,255,0))
-        cv2.line(frame, (0, by), (640, by), (0,255,0))
+    test = Button("test", (100,100), 10)
+    isTrigger = test.is_trigger(frame)
+    print(isTrigger)
+    org_frame = test.add_button_to_view(org_frame)
+
+
+
+
+
     #show photo
-    cv2.imshow('Camera-View', frame)
-    cv2.imshow('r-View', r_gray)
-    cv2.imshow('b-View', b_gray)
+    cv2.imshow('Camera-View', org_frame)
+    cv2.imshow('Camera-test', frame)
     cv2.waitKey(1)
     
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -250,22 +229,3 @@ def ontouch_b(x, y):
 
 
 
-
-
-
-
-
-
-
-'''
-adb shell sendevent /dev/input/event0 3 0 110       //x
-adb shell sendevent /dev/input/event0 3 1 70         //y
-adb shell sendevent /dev/input/event0 1 330 1       //
-adb shell sendevent /dev/input/event0 0 0 0           
-
-adb shell sendevent /dev/input/event0 3 0 101 //step to point (101,200)
-adb shell sendevent /dev/input/event0 0 0 0
-
-adb shell sendevent /dev/input/event0 1 330 0       //
-adb shell sendevent /dev/input/event0 0 0 0           //
-'''

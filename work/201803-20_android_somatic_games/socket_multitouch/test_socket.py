@@ -43,7 +43,7 @@ time.sleep(0.3)
 for z in range(100):
     
 
-    name = input("Please intput your name:")
+    name = input("Test num:")
     
 
     touchDown(0, 200,200)
