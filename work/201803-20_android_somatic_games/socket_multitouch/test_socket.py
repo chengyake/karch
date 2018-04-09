@@ -33,4 +33,5 @@ def touchMove(x,y):
     return
 
 def touchUp(x,y):
+    s.send("u 0\n")
     return
