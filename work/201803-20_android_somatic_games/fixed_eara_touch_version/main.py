@@ -98,7 +98,7 @@ class Camera:
         return self.camera.isOpened()
 
     def stable_dur(self):
-        for i in range(60):
+        for i in range(30):
             _, f = self.camera.read()
             f = cv2.flip(f, 1)
             cv2.imshow('Camera-View',f)
@@ -136,6 +136,18 @@ if not camera.is_opened():
 camera.stable_dur()
 camera.set_bg()
 
+xx=[153,180,223,290]
+yy=[134+300,101+300,72+300,55+300]
+
+
+button_var_list=[]
+button_trg_list=[False,False,False,False, False,False,False,False]
+button_arg_list=[("b1",xx[0],yy[0]),("b2",xx[1],yy[1]),("b3",xx[2],yy[2]),("b4",xx[3],yy[3]),
+                 ("b5",640-xx[3],yy[3]),("b6",640-xx[2],yy[2]),("b7",640-xx[1],yy[1]),("b8",640-xx[0],yy[0])]
+for i in range(8):
+    button_var_list.append(Button(button_arg_list[i][0], (button_arg_list[i][1],button_arg_list[i][2]), 20))
+
+
 while camera.is_opened():
     
     camera.frame_counter()
@@ -148,12 +160,11 @@ while camera.is_opened():
     mask = cv2.inRange(converted, lower, upper)  
     #mask = cv2.GaussianBlur(mask, (3, 3), 0)
     frame = cv2.bitwise_and(frame, frame, mask = mask)  
+    
+    for i in range(8):
+        button_trg_list[i] = button_var_list[i].is_trigger(frame)
+        org_frame = button_var_list[i].add_button_to_view(org_frame)
 
-
-    test = Button("test", (100,100), 10)
-    isTrigger = test.is_trigger(frame)
-    print(isTrigger)
-    org_frame = test.add_button_to_view(org_frame)
 
 
 

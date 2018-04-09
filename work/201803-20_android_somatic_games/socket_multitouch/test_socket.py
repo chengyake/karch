@@ -4,7 +4,7 @@ import time
 import socket       
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(('192.168.50.118', 12345))
+s.connect(('192.168.1.100', 12345))
 
 def touchDown(i, x,y):
     if i == 0:
