@@ -2,13 +2,25 @@ import cv2
 import os
 import time
 import copy
+import socket       
 import numpy as np
 
-
+#import pyscreenshot as ImageGrab
+#import time
+#from pymouse import PyMouse
+#from PIL import ImageFilter
+#import random
 
 '''
-      ok
- A          B
+
+            back             gether
+                ------------
+            _-`    wheel     `-_
+
+           S         A          1
+           M                    2
+           L                    3
+
 
 '''
 
@@ -48,14 +60,14 @@ class Minitouch:
 
 
     def down(self,i, (x,y)):
-        s.send("d %d %d %d 50\n" %(i, x, y))
+        s.send("d %d %d %d 50\n" %(i, x*2.13, y*2.37))
         #print("d %d %d %d 50\n" %(i, x*2.13, y*2.37))
         s.send("c\n")
         return
     
     def move(self,i, (x,y)):
-        s.send("m %d %d %d 50\n" %(i, x, y))
-        #print("m %d %d %d 50\n" %(i, x, y))
+        s.send("m %d %d %d 50\n" %(i, x*2.13, y*2.37))
+        #print("m %d %d %d 50\n" %(i, x*2.13, y*2.37))
         s.send("c\n")
         return
     
@@ -109,6 +121,67 @@ class Button:
                 self.long_press=False
 
 
+
+class Wheel:
+    
+    trigger=False
+    long_press=False
+    index=0
+    def __init__(self):
+
+
+        dis_xy=[(138,155), (145,130), (157,108), (173,88), (193,72), (215,60), (240,53), (266,51), (292,51)]
+        act_xy=[(147,599), (121,593), (97, 577), (85, 556),(82, 534),(86, 511),(98, 491),(112,479),(129,471),
+        (147,469),(163,469),(185,481),(197,492),(209,513),(212,534),(210,554),(196,579),(177,594),(147,599)]
+        self.button_var_list=[]
+        self.button_trg_list=[False,False,False,False, False,False,False,False,False,
+                       False, False,False,False,False, False,False,False,False,False,]
+        for i in range(9):
+            self.button_var_list.append(Button(i, dis_xy[i], 15, act_xy[i]))
+        self.button_var_list.append(Button(9, (320,51), 15, act_xy[9]))
+        for i in range(10,19):
+            self.button_var_list.append(Button(i, (W-dis_xy[i-10][0], dis_xy[i-10][1]), 15, act_xy[i]))
+
+
+    def is_trigger(self, frame):
+        self.trigger=False
+        for i in range(19):
+            self.button_trg_list[i] = self.button_var_list[i].is_trigger(frame)
+            if self.button_trg_list[i]==True:
+                self.trigger=True
+        return self.trigger
+
+    def add_button_to_view(self, org_frame):
+        for i in range(len(self.button_var_list)):
+            org_frame = self.button_var_list[i].add_button_to_view(org_frame)
+
+    def action(self, touch, frame):
+
+        if self.trigger==True:
+            tmpx=0
+            tmpy=0
+            tmpi=0
+            for i in range(len(self.button_var_list)):
+                if self.button_var_list[i].is_trigger(frame):
+                    tmpi+=1
+                    tmpx+=self.button_var_list[i].act_point[0]
+                    tmpy+=self.button_var_list[i].act_point[1]
+            tmpx/=tmpi
+            tmpy/=tmpi
+            if self.long_press==False:
+                self.index=touch.get_index()
+                touch.down(self.index, (tmpx, tmpy))
+                self.long_press=True
+            else:
+                touch.move(self.index, (tmpx, tmpy))
+        
+        if self.trigger==False and self.long_press==True:
+            touch.up(self.index)
+            touch.release_index(self.index)
+            self.long_press=False
+
+
+
 class Camera:
     def __init__(self):
         self.frames=0
@@ -155,10 +228,7 @@ class Camera:
 def main():
     touch = Minitouch()
     camera = Camera()
-    separate_button=[]
-    separate_button.append(Button(19, (210, 20), 25, (1173,142))) #button_ok 
-    separate_button.append(Button(20, (430, 20), 25, (1173,192))) #button_A
-    separate_button.append(Button(21, (130,220), 25, ( 896,592))) #button_B 
+    wheel = Wheel()
 
     if not camera.is_opened():
         print("camera is not opened or unconnected")
@@ -180,11 +250,10 @@ def main():
         #mask = cv2.GaussianBlur(mask, (3, 3), 0)
         frame = cv2.bitwise_and(frame, frame, mask = mask)  
         
-        for b in separate_button:
-            b.is_trigger(frame)
-            b.top(touch)
-            b.add_button_to_view(org_frame)
-
+        #arch button ~ wheel
+        wheel.is_trigger(frame)
+        wheel.action(touch,frame)
+        wheel.add_button_to_view(org_frame)
     
         #show photo
         cv2.imshow('Camera-View', org_frame)
