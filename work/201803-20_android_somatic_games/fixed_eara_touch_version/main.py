@@ -60,21 +60,21 @@ class Minitouch:
 
 
     def down(self,i, (x,y)):
-        s.send("d %d %d %d 50\n" %(i, x*2.13, y*2.37))
-        #print("d %d %d %d 50\n" %(i, x*2.13, y*2.37))
-        s.send("c\n")
+        self.s.send("d %d %d %d 50\n" %(i, x, y))
+        print("d %d %d %d 50\n" %(i, x, y))
+        self.s.send("c\n")
         return
     
     def move(self,i, (x,y)):
-        s.send("m %d %d %d 50\n" %(i, x*2.13, y*2.37))
-        #print("m %d %d %d 50\n" %(i, x*2.13, y*2.37))
-        s.send("c\n")
+        self.s.send("m %d %d %d 50\n" %(i, x, y))
+        print("m %d %d %d 50\n" %(i, x, y))
+        self.s.send("c\n")
         return
     
     def up(self,i):
-        s.send("u %d\n" % i)
-        #print("u %d\n" % i)
-        s.send("c\n")
+        self.s.send("u %d\n" % i)
+        print("u %d\n" % i)
+        self.s.send("c\n")
         return
     
 
@@ -191,7 +191,7 @@ class Camera:
 
     def frame_counter(self):
         self.frames+=1
-        #print("frames: %d" % self.frames)
+        print("frames: %d" % self.frames)
 
     def is_opened(self):
         return self.camera.isOpened()
@@ -230,15 +230,15 @@ def main():
     camera = Camera()
     wheel = Wheel()
     separate_button=[]
-    separate_button.append(Button(19, (210, 20), 18, (1173,142))) #button_b   
-    separate_button.append(Button(20, (430, 20), 18, (1173,192))) #button_g 
-    separate_button.append(Button(21, (130,220), 18, ( 896,592))) #button_s 
-    separate_button.append(Button(22, (144,280), 18, ( 968,467))) #button_m 
-    separate_button.append(Button(23, (160,340), 18, (1094,394))) #button_l 
-    separate_button.append(Button(24, (320,220), 18, (1100,577))) #button_a 
-    separate_button.append(Button(25, (502,220), 18, ( 791,604))) #button_1 
-    separate_button.append(Button(26, (496,280), 18, ( 698,604))) #button_2 
-    separate_button.append(Button(26, (480,340), 18, ( 609,604))) #button_3 
+    separate_button.append(Button(19, (210, 20), 18, (142,1173,))) #button_b   
+    separate_button.append(Button(20, (430, 20), 18, (192,1173,))) #button_g 
+    separate_button.append(Button(21, (130,220), 18, (592, 896,))) #button_s 
+    separate_button.append(Button(22, (144,280), 18, (467, 968,))) #button_m 
+    separate_button.append(Button(23, (160,340), 18, (394,1094,))) #button_l 
+    separate_button.append(Button(24, (320,220), 18, (200,2360,))) #button_a 
+    separate_button.append(Button(25, (502,220), 18, (604, 791,))) #button_1 
+    separate_button.append(Button(26, (496,280), 18, (604, 698,))) #button_2 
+    separate_button.append(Button(26, (480,340), 18, (604, 609,))) #button_3 
 
     if not camera.is_opened():
         print("camera is not opened or unconnected")

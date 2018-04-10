@@ -49,21 +49,21 @@ class Minitouch:
 
 
     def down(self,i, (x,y)):
-        s.send("d %d %d %d 50\n" %(i, x, y))
-        #print("d %d %d %d 50\n" %(i, x*2.13, y*2.37))
-        s.send("c\n")
+        self.s.send("d %d %d %d 50\n" %(i, x, y))
+        print("d %d %d %d 50\n" %(i, x, y))
+        self.s.send("c\n")
         return
     
     def move(self,i, (x,y)):
-        s.send("m %d %d %d 50\n" %(i, x, y))
-        #print("m %d %d %d 50\n" %(i, x, y))
-        s.send("c\n")
+        self.s.send("m %d %d %d 50\n" %(i, x, y))
+        print("m %d %d %d 50\n" %(i, x, y))
+        self.s.send("c\n")
         return
     
     def up(self,i):
-        s.send("u %d\n" % i)
+        self.s.send("u %d\n" % i)
         #print("u %d\n" % i)
-        s.send("c\n")
+        self.s.send("c\n")
         return
     
 
@@ -157,9 +157,9 @@ def main():
     touch = Minitouch()
     camera = Camera()
     separate_button=[]
-    separate_button.append(Button(19, (320, 40 ), 25, (1325, 900))) #button_ok 
-    separate_button.append(Button(20, (130, 220), 25, (100, 1500))) #button_A
-    separate_button.append(Button(21, (502, 220), 25, (2400,1500))) #button_B 
+    separate_button.append(Button(19, (320, 40 ), 25, (500, 1500))) #button_ok 
+    separate_button.append(Button(20, (130, 220), 25, (100, 100))) #button_A
+    separate_button.append(Button(21, (502, 220), 25, (100,2400))) #button_B 
 
     if not camera.is_opened():
         print("camera is not opened or unconnected")
