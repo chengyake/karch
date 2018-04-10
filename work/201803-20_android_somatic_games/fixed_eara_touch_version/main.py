@@ -59,14 +59,14 @@ class Minitouch:
 
 
     def down(self,i, (x,y)):
-        s.send("d %d %d %d 50\n" %(i, x, y))
+        s.send("d %d %d %d 50\n" %(i, x*2.13, y*2.37))
         #print("d %d %d %d 50\n" %(i, x*2.13, y*2.37))
         s.send("c\n")
         return
     
     def move(self,i, (x,y)):
-        s.send("m %d %d %d 50\n" %(i, x, y))
-        #print("m %d %d %d 50\n" %(i, x, y))
+        s.send("m %d %d %d 50\n" %(i, x*2.13, y*2.37))
+        #print("m %d %d %d 50\n" %(i, x*2.13, y*2.37))
         s.send("c\n")
         return
     
@@ -260,10 +260,10 @@ def main():
         frame = cv2.bitwise_and(frame, frame, mask = mask)  
         
         #separate button
-        #for b in separate_button:
-        #    b.is_trigger(frame)
-        #    b.top(touch)
-        #    b.add_button_to_view(org_frame)
+        for b in separate_button:
+            b.is_trigger(frame)
+            b.top(touch)
+            b.add_button_to_view(org_frame)
 
         #arch button ~ wheel
         wheel.is_trigger(frame)
