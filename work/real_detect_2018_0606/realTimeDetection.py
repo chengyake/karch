@@ -7,14 +7,25 @@ from tensorflow.python.framework import graph_util
 from StoreImageToMem import Memimages
 
 
-learning_rate = 0.01
-training_iters = 100000000
-batch_size = 70
+# 1. sigmoid -> 0.01-0.99
+# 2. delete confidence
+# 3. re-design loss
+#
+#
+
+
+
+
+learning_rate = 0.1
+training_iters = 2400000000
+batch_size = 80
 display_step = 10
 save_model_step=100
+HW=287
 
-x = tf.placeholder(tf.float32, [None, 240,240,3])
-y = tf.placeholder(tf.float32, [None, 60,60,22])
+x = tf.placeholder(tf.float32, [None, HW,HW,3])
+y = tf.placeholder(tf.float32, [None, 8,8,6])
+c = tf.placeholder(tf.uint8, [1, HW,HW,3])
 
 
 def conv2d_1(name, inputs, shape, strides=1):
@@ -22,7 +33,7 @@ def conv2d_1(name, inputs, shape, strides=1):
     with tf.name_scope(name+"_conv"):
         W = tf.Variable(tf.random_normal(shape))
         x1 = tf.nn.conv2d(inputs, W, strides=[1, strides, strides, 1], padding='SAME', name="conv")
-        if name=='layer45':
+        if name=='layerM20':
             mean = tf.reduce_mean(W)
             tf.summary.scalar('w_mean',mean)
             tf.summary.scalar('w_val',W[0,0,0,0])
@@ -51,12 +62,9 @@ def conv2d_1(name, inputs, shape, strides=1):
 
 def conv2d_2(name, inputs, shape, strides=2):
     
-    with tf.name_scope(name+"_pad"):
-        x0=tf.pad(inputs, [[0,0], [1,0], [1,0], [0,0]])
-
     with tf.name_scope(name+"_conv"):
         W = tf.Variable(tf.random_normal(shape))
-        x1 = tf.nn.conv2d(x0, W, strides=[1, strides, strides, 1], padding='VALID', name="deconv")
+        x1 = tf.nn.conv2d(inputs, W, strides=[1, strides, strides, 1], padding='VALID', name="deconv") #same ???
 
     with tf.name_scope(name+"_bias"):
         B = tf.Variable(tf.random_normal([shape[-1]]))
@@ -92,44 +100,53 @@ def upscale2(name, inputs, filters, kernel_size):
 def alex_net(inputs):
 
     #with tf.name_scope("input"):
-    conv0 = tf.reshape(inputs, shape=[-1, 240, 240, 3], name="reshape")  #N,240,240,3
-    conv1 = conv2d_1('layer1',  conv0, [3,3,  3, 32]) #n,240,240,32
+    conv0 = tf.reshape(inputs, shape=[-1, HW, HW, 3], name="reshape")  #N,HW,HW,3
+    conv1 = conv2d_1('layer1',  conv0,  [3,3,  3, 32]) #n,HW,HW,32
 
-    conv2 = conv2d_2('layer2',  conv1,  [3,3, 32, 64]) #n,120,120
-    conv3 = conv2d_1('layer3',  conv2,  [1,1, 64, 32]) 
+    conv2 = conv2d_2('layer2',  conv1,  [3,3, 32, 64]) #n,143,143
+    conv3 = conv2d_1('layer3',  conv2,  [1,1, 64, 32]) # 1
     conv4 = conv2d_1('layer4',  conv3,  [3,3, 32, 64]) 
     ladd5 = conv_add('layer5',  conv2,  conv4)
 
 
-    conv6 = conv2d_2('layer6',  ladd5,  [3,3, 64,128]) #n,60,60
-    conv7 = conv2d_1('layer7',  conv6,  [1,1,128, 64]) 
+    conv6 = conv2d_2('layer6',  ladd5,  [3,3, 64,128]) #n,71,71
+    conv7 = conv2d_1('layer7',  conv6,  [1,1,128, 64]) #1
     conv8 = conv2d_1('layer8',  conv7,  [3,3, 64,128]) 
     ladd9 = conv_add('layer9',  conv6,  conv8)
-    conv10= conv2d_1('layer10', ladd9,  [1,1,128, 64]) 
+    conv10= conv2d_1('layer10', ladd9,  [1,1,128, 64]) #2
     conv11= conv2d_1('layer11', conv10, [3,3, 64,128]) 
     ladd12= conv_add('layer12', conv11, ladd9)
-    conv13= conv2d_1('layer13', ladd12, [1,1,128, 64]) 
-    conv14= conv2d_1('layer14', conv13, [3,3, 64,128]) 
-    ladd15= conv_add('layer15', conv14, ladd12)
-    conv16= conv2d_1('layer16', ladd15, [1,1,128, 64]) 
-    conv17= conv2d_1('layer17', conv16, [3,3, 64,128]) 
-    ladd18= conv_add('layer18', conv17, ladd15)
 
-    conv19= conv2d_2('layer19', ladd18, [3,3,128,256]) #n,30,30
-    conv20= conv2d_1('layer20', conv19, [1,1,256,128]) 
+
+    conv19= conv2d_2('layer19', ladd12, [3,3,128,256]) #n,35,35
+    conv20= conv2d_1('layer20', conv19, [1,1,256,128]) #1
     conv21= conv2d_1('layer21', conv20, [3,3,128,256]) 
     ladd22= conv_add('layer22', conv21, conv19)
-    conv23= conv2d_1('layer23', ladd22, [1,1,256,128]) 
+    conv23= conv2d_1('layer23', ladd22, [1,1,256,128]) #2
     conv24= conv2d_1('layer24', conv23, [3,3,128,256]) 
     ladd25= conv_add('layer25', conv24, ladd22)
-    conv26= conv2d_1('layer26', ladd25, [1,1,256,128]) 
+    conv26= conv2d_1('layer26', ladd25, [1,1,256,128]) #3
     conv27= conv2d_1('layer27', conv26, [3,3,128,256]) 
     ladd28= conv_add('layer28', conv27, ladd25)
-    conv29= conv2d_1('layer29', ladd28, [1,1,256,128]) 
+    conv29= conv2d_1('layer29', ladd28, [1,1,256,128]) #4
     conv30= conv2d_1('layer30', conv29, [3,3,128,256]) 
     ladd31= conv_add('layer31', conv30, ladd28)
+    convE1= conv2d_1('layerE1', ladd31, [1,1,256,128]) #5
+    convE2= conv2d_1('layerE2', convE1, [3,3,128,256]) 
+    laddE3= conv_add('layerE3', convE2, ladd31)
+    convE4= conv2d_1('layerE4', laddE3, [1,1,256,128]) #6
+    convE5= conv2d_1('layerE5', convE4, [3,3,128,256]) 
+    laddE6= conv_add('layerE6', convE5, laddE3)
+    convF1= conv2d_1('layerF1', laddE6, [1,1,256,128]) #7
+    convF2= conv2d_1('layerF2', convF1, [3,3,128,256]) 
+    laddF3= conv_add('layerF3', convF2, laddE6)
+    convF4= conv2d_1('layerF4', laddF3, [1,1,256,128]) #8
+    convF5= conv2d_1('layerF5', convF4, [3,3,128,256]) 
+    laddF6= conv_add('layerF6', convF5, laddF3)
 
-    conv32= conv2d_2('layer32', ladd31, [3,3,256,512]) #n,15,15
+
+
+    conv32= conv2d_2('layer32', laddF6, [3,3,256,512]) #n,17,17
     conv33= conv2d_1('layer33', conv32, [1,1,512,256]) 
     conv34= conv2d_1('layer34', conv33, [3,3,256,512]) 
     ladd35= conv_add('layer35', conv34, conv32)
@@ -142,45 +159,93 @@ def alex_net(inputs):
     convB2= conv2d_1('layerB2', laddB1, [1,1,512,256]) 
     convB3= conv2d_1('layerB3', convB2, [3,3,256,512]) 
     laddB4= conv_add('layerB4', convB3, laddB1)
+    convC1= conv2d_1('layerC1', laddB4, [1,1,512,256]) 
+    convC2= conv2d_1('layerC2', convC1, [3,3,256,512]) 
+    laddC3= conv_add('layerC3', convC2, laddB4)
+    convD1= conv2d_1('layerD1', laddC3, [1,1,512,256]) 
+    convD2= conv2d_1('layerD2', convD1, [3,3,256,512]) 
+    laddD3= conv_add('layerD3', convD2, laddC3)
+    convG1= conv2d_1('layerG1', laddD3, [1,1,512,256]) #7
+    convG2= conv2d_1('layerG2', convG1, [3,3,256,512]) 
+    laddG3= conv_add('layerG3', convG2, laddD3)
+    convG4= conv2d_1('layerG4', laddG3, [1,1,512,256]) #8
+    convG5= conv2d_1('layerG5', convG4, [3,3,256,512]) 
+    laddG6= conv_add('layerG6', convG5, laddG3)
 
-    upll39= upscale2('layer39', laddB4, 512, 3)#n, 30, 30
-    conv40= conv2d_1('layer40', upll39, [1,1,512,256]) 
-    conv41= conv2d_1('layer41', conv40, [3,3,256,512]) 
 
-    upll42= upscale2('layer42', conv41, 256, 3)#n, 60, 60
-    conv43= conv2d_1('layer43', upll42, [1,1,256,128]) 
-    conv44= conv2d_1('layer44', conv43, [3,3,128,256]) 
+    convM19= conv2d_2('layerM19', laddG6,  [3,3,512, 1024]) #n,8,8
+    convM20= conv2d_1('layerM20', convM19, [1,1,1024,  128])
+    convM21= conv2d_1('layerM21', convM20, [1,1,128,  6]) 
 
-    conv45= conv2d_1('layer45', conv44, [3,3,256, 22]) 
 
     #with tf.name_scope("output"):
-    out = tf.sigmoid(conv45, "sigmoid")
+    out = tf.sigmoid(convM21, "sigmoid")
     #out = tf.nn.relu(conv45, name = "sigmoid")
     return out
-    #60 60 20
 
 
 memimg = Memimages()
 pred = alex_net(x)
-pred_a=pred[:,1:-1,1:-1,:20]
-pred_b=pred[:,1:-1,1:-1,20:]
-y_a=y[:,1:-1,1:-1,:20]
-y_b=y[:,1:-1,1:-1,20:]
 
-cast1=tf.reduce_mean(tf.square(pred_a-y_a))
-cast2=tf.reduce_mean(tf.square((pred_a-y_a)*y_a))
-cast3=tf.reduce_mean(tf.square(pred_b-y_b))
-cast=cast1+10*cast2+20*cast3 #100*cast1+10*cast2+cast3
+pred_a=pred[:,:,:,:2]
+y_a=y[:,:,:,:2]
+
+pred_b=pred[:,:,:,2:4]
+y_b=y[:,:,:,2:4]
+
+pred_c=pred[:,:,:,4:6]
+y_c=y[:,:,:,4:6]
+
+
+#class_loss
+cast1 = tf.reduce_mean(tf.pow(2.7, tf.abs(y_a-pred_a))-1)
+#center_loss
+cast2 = tf.reduce_mean(tf.pow(3.2, tf.abs(y_b-pred_b))-1)
+#box loss
+cast3 = tf.reduce_mean(tf.pow(4.0, tf.abs(y_c-pred_c))-1)
+
+cast = cast1+cast2+cast3
+
+
+
+tf.summary.scalar('loss1',cast1)
+tf.summary.scalar('loss2',cast2)
+tf.summary.scalar('loss3',cast3)
 tf.summary.scalar('loss',cast)
+tf.summary.image("image", c)
 
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cast)
 
-#correct_pred = tf.equal(tf.argmax(pred,1), tf.argmax(y,1))
-#accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32))
 
 init = tf.global_variables_initializer()
 
 saver = tf.train.Saver()
+
+def write_photo(batch_x, p, name):
+    display_mode=1
+
+    img=batch_x[0].copy()
+    img*=255
+
+    rate = p[0,:,:,:2]/np.expand_dims(np.sum(p[0,:,:,:2], axis=-1), axis=-1)
+    ij = np.where(rate[:,:,:2]==np.max(rate[:,:,:2]))
+    i=ij[0][0]
+    j=ij[1][0]
+    index=ij[2][0]
+    if np.sum(p[0,i,j,:2]) >=0.6:
+        xc = (p[0,i,j,2]+j)/8.0
+        yc = (p[0,i,j,3]+i)/8.0
+        xw = p[0,i,j,4]
+        yh = p[0,i,j,5]
+        percent = rate[i,j,index]
+        cv2.rectangle(img, (int((xc-xw)*HW), int((yc-yh)*HW)), (int((xc+xw)*HW), int((yc+yh)*HW)), (0,255,0), 1)
+        cv2.putText(img,memimg.classes[index]+"%0.3f" % percent, (int(xc*HW), int(yc*HW)),cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.5,(0,255,0), 1)
+
+
+    cv2.imwrite(name, img)
+    return np.expand_dims(img, 0)
+
+
 
 with tf.Session() as sess:
     sess.run(init)
@@ -190,7 +255,7 @@ with tf.Session() as sess:
     test_writer = tf.summary.FileWriter("logs/test")
 
     
-    constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ['sigmoid'])
+    #constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ['sigmoid'])
     #write graph and model to save
     tf.train.write_graph(sess.graph_def, "save", "graph.pbtxt")
     ckpt = tf.train.get_checkpoint_state("./save")
@@ -200,46 +265,60 @@ with tf.Session() as sess:
     #
 
     step = 0
+    train_img=np.zeros((1,HW,HW,3))
+    val_img=np.zeros((1,HW,HW,3))
     while step * batch_size < training_iters:
         step += 1
         batch_x, batch_y = memimg.get_batch(batch_size)
         train_loss, _ =sess.run([cast, optimizer], feed_dict={x: batch_x, y: batch_y})
         
-        #calc loss of train and val
-        if step % display_step == 0:
-            train_loss, rs=sess.run([cast, merged], feed_dict={x: batch_x, y: batch_y})
+        if step % display_step==0:
+            #calc train loss
+            train_loss, p, rs=sess.run([cast, pred, merged], feed_dict={x: batch_x, y: batch_y, c:train_img})
             train_writer.add_summary(rs, step)
-
+            train_img = write_photo(batch_x, p, "train.png")
+            #calc val loss
             batch_x, batch_y = memimg.get_val(batch_size)
-            val_loss, p, rs=sess.run([cast, pred, merged], feed_dict={x: batch_x, y: batch_y})
+            val_loss, p, rs=sess.run([cast, pred, merged], feed_dict={x: batch_x, y: batch_y, c:val_img})
             test_writer.add_summary(rs, step)
-            img=batch_x[0].copy()
-            img*=255
-            cv2.imwrite("batch_x_org.png", img)
-            for i in range(1,59):
-                for j in range(1,59):
-                    if np.max(p[0,i,j,:20])>=0.9:
-                        h = p[0,i,j,20]*240
-                        w = p[0,i,j,21]*240
-                        index = np.where(p[0,i,j,:20]==np.max(p[0,i,j,:20]))
-                        cv2.rectangle(img, (int(j*4-w), int(i*4-h)), (int(j*4+w), int(i*4+h)), (0,255,0), 1)
-                        cv2.putText(img,memimg.classes[index[0][0]],(int(j*4-w),int(i*4-h)),cv2.FONT_HERSHEY_COMPLEX_SMALL,0.8,(0,255,0), 1)
-            cv2.imwrite("batch_x_rect.png", img)
-            for i in range(20):
-                cv2.imwrite("batch_%s.png" % memimg.classes[i], (np.hstack((np.array(p)[0,1:-1,1:-1,i],np.array(batch_y)[0,1:-1,1:-1,i]))*255).astype("uint8"))
-          
+            val_img = write_photo(batch_x, p, 'val.png')
             print("Iter " + str(step*batch_size) + ", Train Loss= "+"{:.6f}".format(train_loss)+", Val Loss= "+"{:.6f}".format(val_loss))
         else:
             print("Iter " + str(step*batch_size) + ", Train Loss= "+"{:.6f}".format(train_loss))
+
+
         #save model
         if step % save_model_step == 0:
             saver.save(sess, "save/model.ckpt", global_step=step)
             print("save model.ckpt success")
 
-        if step % save_model_step*10 == 0:
-            with tf.gfile.FastGFile('./save/model_%08d.pb' % step, mode='wb') as f:
-                f.write(constant_graph.SerializeToString())
+        #if step % save_model_step*10 == 0:
+        #    with tf.gfile.FastGFile('./save/model_%08d.pb' % step, mode='wb') as f:
+        #        f.write(constant_graph.SerializeToString())
 
     print ("Optimization Finished!")
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
