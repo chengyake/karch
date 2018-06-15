@@ -94,7 +94,7 @@ class Memimages:
                 vnp[int(center_y*8)][int(center_x*8)][4]=center_w
                 vnp[int(center_y*8)][int(center_x*8)][5]=center_h
             
-            if class_id >=0:
+            if class_id >=-1:
                 ivl.append(img)
                 ivl.append(vnp)
                 if i%10:
@@ -160,6 +160,8 @@ if __name__ == '__main__':
                     cv2.rectangle(img, (int((xc-xw)*HW), int((yc-yh)*HW)), (int((xc+xw)*HW), int((yc+yh)*HW)), (0,255,0), 1)
                     cv2.putText(img,test.classes[index[0][0]]+"%0.3f" % percent, (int(xc*HW), int(yc*HW)),cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,(0,255,0), 1)
         cv2.imwrite("test_train.png", img)
+        #cv2.imwrite("test_train_lab0.png", ((lab[0,:,:,0]*9/10+0.1)*255).astype('uint8'))
+        #cv2.imwrite("test_train_lab1.png", ((lab[0,:,:,1]*9/10+0.1)*255).astype('uint8'))
     if test_mode==3:
         img,lab = test.get_val(64)
         img=img[0].copy()
