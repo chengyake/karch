@@ -13,15 +13,16 @@ from StoreImageToMem import Memimages
 
 learning_rate = 0.001
 training_iters = 2400000000
-batch_size = 50
+batch_size = 60
 display_step = 10
-save_model_step=100
+save_model_step=10
 HW=287
-is_training=True
-#is_training=False
+#is_training=True
+is_training=False
 
 x = tf.placeholder(tf.float32, [None, HW,HW,3])
 y = tf.placeholder(tf.float32, [None, 8,8,6])
+#k = tf.placeholder(tf.float32)
 #c = tf.placeholder(tf.uint8, [1, HW,HW,3])
 
 
@@ -32,17 +33,26 @@ def bn_layer(x,is_training,name='BatchNorm',moving_decay=0.9,eps=1e-5):
 
     param_shape = shape[-1]
     with tf.variable_scope(name):
-        gamma = tf.get_variable('gamma',param_shape,initializer=tf.constant_initializer(1))
-        beta  = tf.get_variable('beat', param_shape,initializer=tf.constant_initializer(0))
 
-        mean = tf.get_variable('mean',param_shape,initializer=tf.constant_initializer(1))
-        var  = tf.get_variable('var',param_shape,initializer=tf.constant_initializer(1))
+        gamma = tf.Variable(tf.ones(param_shape), name='gamma')
+        beta  = tf.Variable(tf.zeros(param_shape), name='beta')
+        mean  = tf.Variable(tf.ones(param_shape), trainable=False, name='mean')
+        var   = tf.Variable(tf.ones(param_shape), trainable=False, name='var')
 
         if is_training == True:
             axes = list(range(len(shape)-1))
             batch_mean, batch_var = tf.nn.moments(x,axes,name='moments')
-            mean = tf.identity(batch_mean)
-            var = tf.identity(batch_var)
+            mean = tf.assign(mean, batch_mean)
+            var  = tf.assign(var, batch_var)
+
+
+        if name=='layerM20' and is_training == True:
+            mean = tf.reduce_mean(var)
+            tf.summary.scalar('w_mean',mean)
+            tf.summary.scalar('w_val',var[0])
+            tf.summary.scalar('w_max',tf.reduce_max(var))
+            tf.summary.scalar('w_min',tf.reduce_min(var))
+
 
 
         return tf.nn.batch_normalization(x,mean,var,beta,gamma,eps)
@@ -57,12 +67,6 @@ def conv2d_1(name, inputs, shape, strides=1):
     with tf.name_scope(name+"_conv"):
         W = tf.Variable(tf.random_normal(shape))
         x1 = tf.nn.conv2d(inputs, W, strides=[1, strides, strides, 1], padding='SAME', name="conv")
-        if name=='layerM20':
-            mean = tf.reduce_mean(W)
-            tf.summary.scalar('w_mean',mean)
-            tf.summary.scalar('w_val',W[0,0,0,0])
-            tf.summary.scalar('w_max',tf.reduce_max(W))
-            tf.summary.scalar('w_min',tf.reduce_min(W))
 
     with tf.name_scope(name+"_bias"):
         B = tf.Variable(tf.random_normal([shape[-1]]))
@@ -117,6 +121,12 @@ def upscale2(name, inputs, filters, kernel_size):
         deconv = tf.layers.conv2d_transpose(inputs, filters, kernel_size, 2, "SAME")
     return deconv
 
+def dropout(name, inputs, keep_prob):
+    with tf.name_scope(name):
+        return tf.nn.dropout(inputs, keep_prob)
+    
+
+
 def yake_net(inputs):
 
     #with tf.name_scope("input"):
@@ -151,22 +161,23 @@ def yake_net(inputs):
     conv29= conv2d_1('layer29', ladd28, [1,1,128,64]) #4
     conv30= conv2d_1('layer30', conv29, [3,3,64,128]) 
     ladd31= conv_add('layer31', conv30, ladd28)
-    #convE1= conv2d_1('layerE1', ladd31, [1,1,256,128]) #5
-    #convE2= conv2d_1('layerE2', convE1, [3,3,128,256]) 
-    #laddE3= conv_add('layerE3', convE2, ladd31)
-    #convE4= conv2d_1('layerE4', laddE3, [1,1,256,128]) #6
-    #convE5= conv2d_1('layerE5', convE4, [3,3,128,256]) 
-    #laddE6= conv_add('layerE6', convE5, laddE3)
-    #convF1= conv2d_1('layerF1', laddE6, [1,1,256,128]) #7
-    #convF2= conv2d_1('layerF2', convF1, [3,3,128,256]) 
-    #laddF3= conv_add('layerF3', convF2, laddE6)
-    #convF4= conv2d_1('layerF4', laddF3, [1,1,256,128]) #8
-    #convF5= conv2d_1('layerF5', convF4, [3,3,128,256]) 
-    #laddF6= conv_add('layerF6', convF5, laddF3)
+#
+    convE1= conv2d_1('layerE1', ladd31, [1,1,128,64]) #5
+    convE2= conv2d_1('layerE2', convE1, [3,3,64,128]) 
+    laddE3= conv_add('layerE3', convE2, ladd31)
+    convE4= conv2d_1('layerE4', laddE3, [1,1,128,64]) #6
+    convE5= conv2d_1('layerE5', convE4, [3,3,64,128]) 
+    laddE6= conv_add('layerE6', convE5, laddE3)
+    convF1= conv2d_1('layerF1', laddE6, [1,1,128,64]) #7
+    convF2= conv2d_1('layerF2', convF1, [3,3,64,128]) 
+    laddF3= conv_add('layerF3', convF2, laddE6)
+    convF4= conv2d_1('layerF4', laddF3, [1,1,128,64]) #8
+    convF5= conv2d_1('layerF5', convF4, [3,3,64,128]) 
+    laddF6= conv_add('layerF6', convF5, laddF3)
 
 
 
-    conv32= conv2d_2('layer32', ladd31, [3,3,128,256]) #n,17,17
+    conv32= conv2d_2('layer32', laddF6, [3,3,128,256]) #n,17,17
     conv33= conv2d_1('layer33', conv32, [1,1,256,128]) 
     conv34= conv2d_1('layer34', conv33, [3,3,128,256]) 
     ladd35= conv_add('layer35', conv34, conv32)
@@ -179,22 +190,25 @@ def yake_net(inputs):
     convB2= conv2d_1('layerB2', laddB1, [1,1,256,128]) 
     convB3= conv2d_1('layerB3', convB2, [3,3,128,256]) 
     laddB4= conv_add('layerB4', convB3, laddB1)
-    #convC1= conv2d_1('layerC1', laddB4, [1,1,512,256]) 
-    #convC2= conv2d_1('layerC2', convC1, [3,3,256,512]) 
-    #laddC3= conv_add('layerC3', convC2, laddB4)
-    #convD1= conv2d_1('layerD1', laddC3, [1,1,512,256]) 
-    #convD2= conv2d_1('layerD2', convD1, [3,3,256,512]) 
-    #laddD3= conv_add('layerD3', convD2, laddC3)
-    #convG1= conv2d_1('layerG1', laddD3, [1,1,512,256]) #7
-    #convG2= conv2d_1('layerG2', convG1, [3,3,256,512]) 
-    #laddG3= conv_add('layerG3', convG2, laddD3)
-    #convG4= conv2d_1('layerG4', laddG3, [1,1,512,256]) #8
-    #convG5= conv2d_1('layerG5', convG4, [3,3,256,512]) 
-    #laddG6= conv_add('layerG6', convG5, laddG3)
+#
+    convC1= conv2d_1('layerC1', laddB4, [1,1,256,128]) 
+    convC2= conv2d_1('layerC2', convC1, [3,3,128,256]) 
+    laddC3= conv_add('layerC3', convC2, laddB4)
+    convD1= conv2d_1('layerD1', laddC3, [1,1,256,128]) 
+    convD2= conv2d_1('layerD2', convD1, [3,3,128,256]) 
+    laddD3= conv_add('layerD3', convD2, laddC3)
+    convG1= conv2d_1('layerG1', laddD3, [1,1,256,128]) #7
+    convG2= conv2d_1('layerG2', convG1, [3,3,128,256]) 
+    laddG3= conv_add('layerG3', convG2, laddD3)
+    convG4= conv2d_1('layerG4', laddG3, [1,1,256,128]) #8
+    convG5= conv2d_1('layerG5', convG4, [3,3,128,256]) 
+    laddG6= conv_add('layerG6', convG5, laddG3)
 
 
-    convM19= conv2d_2('layerM19', laddB4,  [3,3,256, 512]) #n,8,8
+    convM19= conv2d_2('layerM19', laddG6 , [3,3,256, 512]) #n,8,8
+    #dropO1 = dropout ("layerO1" , convM19, keep_prob)
     convM20= conv2d_1('layerM20', convM19, [1,1,512,  128])
+    #dropO2 = dropout ("layerO2" , convM20, keep_prob)
     convM21= conv2d_1('layerM21', convM20, [1,1,128,  6]) 
 
 
@@ -208,6 +222,7 @@ def yake_net(inputs):
 
 
 memimg = Memimages()
+#pred = yake_net(x, k)
 pred = yake_net(x)
 
 pred_a=pred[:,:,:,:2]
@@ -242,7 +257,7 @@ optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cast)
 
 init = tf.global_variables_initializer()
 
-saver = tf.train.Saver(tf.trainable_variables())
+saver = tf.train.Saver(tf.global_variables())
 
 def write_photo(batch_x, p, name):
     display_mode=1
@@ -252,6 +267,8 @@ def write_photo(batch_x, p, name):
 
     rate = p[0,:,:,:2]/np.expand_dims(np.sum(p[0,:,:,:2], axis=-1), axis=-1)
     ij = np.where(rate[:-1,:,:2]==np.max(rate[:-1,:,:2]))
+    #print(p[0,:,:,:])
+    #print(ij)
     i=ij[0][0]
     j=ij[1][0]
     index=ij[2][0]
@@ -278,7 +295,6 @@ with tf.Session() as sess:
     test_writer = tf.summary.FileWriter("logs/test")
 
     
-    constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ['sigmoid'])
     #write graph and model to save
     tf.train.write_graph(sess.graph_def, "save", "graph.pbtxt")
     ckpt = tf.train.get_checkpoint_state("./save")
@@ -286,8 +302,17 @@ with tf.Session() as sess:
         print(ckpt.model_checkpoint_path)
         saver.restore(sess, ckpt.model_checkpoint_path)
     
-    
+    #names = [v.name for v in tf.global_variables()]
+    #print(names)
+    #print('layer11_BN/layer11/mean:0', (sess.run('layer11_BN/layer11/mean:0')))
+    #print('layer11_BN/layer11/var:0', (sess.run('layer11_BN/layer11/var:0')))
+
     if is_training == False:
+        batch_x, batch_y = memimg.get_val(batch_size)
+        p=sess.run(pred, feed_dict={x: batch_x})
+        print(p[0,:,:,1])
+        write_photo(batch_x, p, 'val.png')
+        constant_graph = graph_util.convert_variables_to_constants(sess, sess.graph_def, ['sigmoid'])
         with tf.gfile.FastGFile('./save/model_yake.pb' , mode='wb') as f:
             f.write(constant_graph.SerializeToString())
             exit()
