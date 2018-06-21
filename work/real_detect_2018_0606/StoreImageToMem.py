@@ -38,7 +38,7 @@ class Memimages:
             rate=1.0
             flag=''
             ivl=[]
-            vnp=np.ones((8,8,6))*0.001
+            vnp=np.ones((8,8,6))*0.01
             data = np.ones((HW,HW,3))*128
             img_np=cv2.imread(img_dir+"/"+img_list[i])
             h,w,c=img_np.shape
@@ -88,7 +88,7 @@ class Memimages:
                 center_w = (xmax-xmin)/2
                 center_h = (ymax-ymin)/2
 
-                vnp[int(center_y*8)][int(center_x*8)][class_id]=0.999
+                vnp[int(center_y*8)][int(center_x*8)][class_id]=0.99
                 vnp[int(center_y*8)][int(center_x*8)][2]=8*center_x-int(8*center_x)
                 vnp[int(center_y*8)][int(center_x*8)][3]=8*center_y-int(8*center_y)
                 vnp[int(center_y*8)][int(center_x*8)][4]=center_w
