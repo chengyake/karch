@@ -38,7 +38,7 @@ class Memimages:
             rate=1.0
             flag=''
             ivl=[]
-            vnp=np.ones((8,8,6))*0.01
+            vnp=np.ones((HW,HW,4))*0.001
             data = np.ones((HW,HW,3))*128
             img_np=cv2.imread(img_dir+"/"+img_list[i])
             h,w,c=img_np.shape
@@ -88,13 +88,16 @@ class Memimages:
                 center_w = (xmax-xmin)/2
                 center_h = (ymax-ymin)/2
 
-                vnp[int(center_y*8)][int(center_x*8)][class_id]=0.99
-                vnp[int(center_y*8)][int(center_x*8)][2]=8*center_x-int(8*center_x)
-                vnp[int(center_y*8)][int(center_x*8)][3]=8*center_y-int(8*center_y)
-                vnp[int(center_y*8)][int(center_x*8)][4]=center_w
-                vnp[int(center_y*8)][int(center_x*8)][5]=center_h
+                cyi = int(center_y*HW)
+                cxi = int(center_x*HW)
+
+                vnp[cyi][cxi][class_id]=0.999
+                vnp[cyi][cxi][2]=center_w
+                vnp[cyi][cxi][3]=center_h
             
-            if class_id >=0:
+
+
+            if class_id >=-1:
                 ivl.append(img)
                 ivl.append(vnp)
                 if i%10:
@@ -102,7 +105,7 @@ class Memimages:
                 else:
                     self.val_list.append(ivl)
 
-        np.savez(outdir+"train.npz", train=self.train_list, val=self.val_list)
+        #np.savez(outdir+"train.npz", train=self.train_list, val=self.val_list)
         print("make train.npz success")
         print("train:%d  val:%d" % self.get_sum())
 
@@ -143,40 +146,18 @@ if __name__ == '__main__':
     test_mode=2
 
     if test_mode==2:
-        img,lab = test.get_batch(64)
-        img=img[0].copy()
-        img=img*255
-        
-        rate = lab[0,:,:,:2]/np.expand_dims(np.sum(lab[0,:,:,:2], axis=-1), axis=-1)
-        for i in range(8):
-            for j in range(8):
-                if np.sum(lab[0,i,j,:2]) >=0.9:
-                    index = np.where(rate[i,j,:2]==np.max(rate[i,j,:2]))
-                    xc = (lab[0,i,j,2]+j)/8.0
-                    yc = (lab[0,i,j,3]+i)/8.0
-                    xw = lab[0,i,j,4]
-                    yh = lab[0,i,j,5]
-                    percent = rate[i,j,index[0][0]]
-                    cv2.rectangle(img, (int((xc-xw)*HW), int((yc-yh)*HW)), (int((xc+xw)*HW), int((yc+yh)*HW)), (0,255,0), 1)
-                    cv2.putText(img,test.classes[index[0][0]]+"%0.3f" % percent, (int(xc*HW), int(yc*HW)),cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,(0,255,0), 1)
-        cv2.imwrite("test_train.png", img)
-        #cv2.imwrite("test_train_lab0.png", ((lab[0,:,:,0]*9/10+0.1)*255).astype('uint8'))
-        #cv2.imwrite("test_train_lab1.png", ((lab[0,:,:,1]*9/10+0.1)*255).astype('uint8'))
-    if test_mode==3:
         img,lab = test.get_val(64)
         img=img[0].copy()
         img=img*255
         
         rate = lab[0,:,:,:2]/np.expand_dims(np.sum(lab[0,:,:,:2], axis=-1), axis=-1)
-        for i in range(8):
-            for j in range(8):
+        for i in range(HW):
+            for j in range(HW):
                 if np.sum(lab[0,i,j,:2]) >=0.9:
                     index = np.where(rate[i,j,:2]==np.max(rate[i,j,:2]))
-                    xc = (lab[0,i,j,2]+j)/8.0
-                    yc = (lab[0,i,j,3]+i)/8.0
-                    xw = lab[0,i,j,4]
-                    yh = lab[0,i,j,5]
+                    w = int(lab[0,i,j,2]*HW) 
+                    h = int(lab[0,i,j,3]*HW)
                     percent = rate[i,j,index[0][0]]
-                    cv2.rectangle(img, (int((xc-xw)*HW), int((yc-yh)*HW)), (int((xc+xw)*HW), int((yc+yh)*HW)), (0,255,0), 1)
-                    cv2.putText(img,test.classes[index[0][0]]+"%0.3f" % percent, (int(xc*HW), int(yc*HW)),cv2.FONT_HERSHEY_COMPLEX_SMALL, 0.8,(0,255,0), 1)
+                    cv2.rectangle(img, (j-w, i-h), (j+w, i+h), (0,255,0), 1)
+                    cv2.putText(img,test.classes[index[0][0]]+"%0.3f" % percent, (j-w,i-h),cv2.FONT_HERSHEY_COMPLEX_SMALL,0.8,(0,255,0), 1)
         cv2.imwrite("test_train.png", img)
