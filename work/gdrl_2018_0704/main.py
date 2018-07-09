@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import sys
 import copy
 import argparse
 import random
@@ -7,7 +8,7 @@ from gdrl import DL
 from showProcess import ShowProcess
 
 #individual
-num_all  = 40
+num_all  = 100
 num_best = 5
 num_drop = num_best*2
 
@@ -20,8 +21,8 @@ probility_mutation = 0.001
 class genetic_algo:
     
     def __init__(self):
-        self.gdrl = DL()
         self.genes_score = {}
+        self.gdrl = DL()
         self.genes = np.random.randint(2,size=(num_all, self.gdrl.layer_num, self.gdrl.layer_nodes, self.gdrl.layer_nodes))
         return
 
@@ -30,6 +31,9 @@ class genetic_algo:
         for i in range(num_all):
             #pb.show_process(i)
             self.genes_score[i] = self.gdrl.train(self.genes[i])
+            #print("yakelog:",i, self.genes_score[i])
+            #sys.stdout.write("yakelog %d\t:%f\n" %(i, self.genes_score[i]))
+            #sys.stdout.flush()
         return
 
     def sort_drop_and_save(self):
@@ -42,8 +46,10 @@ class genetic_algo:
 
         np.save("best.npy", self.genes[self.idx_sorted[0][0]])
 
-        print("yakelog: score:",self.idx_sorted)
-        print("yakelog: score:",self.idx_sorted[0][1], self.idx_sorted[-1][1])
+        #print("yakelog: score:",self.idx_sorted)
+        #print("yakelog: score:",self.idx_sorted[0][1], self.idx_sorted[-1][1])
+        sys.stdout.write("yakelog: score: %f, %f, %f\n" % (self.idx_sorted[0][1],self.idx_sorted[int(num_all/2)][1],self.idx_sorted[-1][1]))
+        sys.stdout.flush()
         return
     
     def _exchange_genes(self, idx1, idx2):
@@ -81,7 +87,7 @@ class genetic_algo:
 
 
 
-times_loop = 10
+times_loop = 1000000
 
 if __name__ == '__main__':
 

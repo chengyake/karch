@@ -14,18 +14,16 @@ class DL:
 
     learning_rate = 0.001
     batch_size = 128
-    layer_num = 4  #include io layer
+    layer_num = 8  #include io layer
     layer_nodes = 1024 #must > n_inputs
 
     n_inputs = 784
     n_classes = 10 
-    training_iters = 1000*1
+    training_iters = 1000*800
     
     def __init__(self):
         self.mnist = input_data.read_data_sets("./data", one_hot=True)
-        self.x = tf.placeholder(tf.float32, [None, self.n_inputs])
-        self.y = tf.placeholder(tf.float32, [None, self.n_classes])
-        #print(self.learning_rate, self.batch_size, self.layer_num, self.layer_nodes)
+        print(self.learning_rate, self.batch_size, self.layer_num, self.layer_nodes)
 
     def bn_layer(self, inputs, is_training=True, name='BatchNorm', moving_decay=0.9, eps=1e-5):
         shape = inputs.shape
@@ -83,6 +81,8 @@ class DL:
 
 
     def train(self, genes):
+        self.x = tf.placeholder(tf.float32, [None, self.n_inputs])
+        self.y = tf.placeholder(tf.float32, [None, self.n_classes])
 
         pred = self.alex_net(self.x, genes)
         
@@ -102,21 +102,25 @@ class DL:
                 sess.run(optimizer, feed_dict={self.x: batch_x, self.y: batch_y})
                 step += 1
             score = sess.run(accuracy, feed_dict={self.x: self.mnist.test.images, self.y: self.mnist.test.labels})
-            return score
 
-
+        tf.reset_default_graph()
+        return score
  
 
 
 
 if __name__ == '__main__':
 
-    #self.genes.shape=self.layer_num+2, self.layer_nodes, self.layer_nodes
 
     gdrl = DL()
-    #genes = np.ones((gdrl.layer_num+2, gdrl.layer_nodes, gdrl.layer_nodes))
-    genes = np.random.randint(0,2, size=(gdrl.layer_num+2, gdrl.layer_nodes, gdrl.layer_nodes))
+    genes = np.ones((gdrl.layer_num+2, gdrl.layer_nodes, gdrl.layer_nodes))
+    #genes = np.random.randint(0,2, size=(gdrl.layer_num+2, gdrl.layer_nodes, gdrl.layer_nodes))
     score = gdrl.train(genes)
     print ("yake:", score)
-
+'''
+    gdrl = DL()
+    genes = np.zeros((gdrl.layer_num+2, gdrl.layer_nodes, gdrl.layer_nodes))
+    score = gdrl.train(genes)
+    print ("yake:", score)
+'''
 
