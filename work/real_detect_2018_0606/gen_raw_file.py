@@ -7,7 +7,7 @@ import os
 import cv2
 import numpy as np
 
-HW=287
+HW=256
 
 images = os.listdir("./images")
 for i in images:
@@ -26,7 +26,7 @@ for i in images:
     raw[int(HW/2-new_h/2) : int(HW/2+new_h/2), int(HW/2-new_w/2) : int(HW/2+new_w/2)] = dst_img
     
     #cv2.imwrite("test_"+i, raw)
-    raw=(raw.astype("float32"))/255.0
+    raw=(raw.astype("float32"))
     raw.tofile(i+".raw")
 
 
