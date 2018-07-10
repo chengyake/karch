@@ -7,19 +7,19 @@ import matplotlib.pyplot as plt
 
 class showLine:
 
-    def __init__(self, data, avg=3):
+    def __init__(self, name, data, avg=3):
         self.data = data
 
-        y = self.avg(self.data, avg)
+        y = self.avg_process(self.data, avg)
         mpl.rcParams['xtick.labelsize'] = 10
         mpl.rcParams['ytick.labelsize'] = 10
-        plt.figure('data')#windows name
-        plt.plot(range((avg+1)/2, len(y)+(avg+1)/2), y, 'r', lw=1)
+        plt.figure(name)#windows name
+        plt.plot(range(int((avg+1)/2), len(y)+int((avg+1)/2)), y, 'r', lw=1)
         plt.plot(range(len(data)), data, 'k', lw=1)
-        #plt.show()
-        plat.savefig('test.png')
+        plt.show()
+        #plt.savefig('test.png')
 
-    def avg(self, data, num=1):
+    def avg_process(self, data, num=1):
         l = len(data)
         if l <= num or num==1:
             return data
