@@ -16,7 +16,8 @@ class showLine:
         plt.figure('data')#windows name
         plt.plot(range((avg+1)/2, len(y)+(avg+1)/2), y, 'r', lw=1)
         plt.plot(range(len(data)), data, 'k', lw=1)
-        plt.show()
+        #plt.show()
+        plat.savefig('test.png')
 
     def avg(self, data, num=1):
         l = len(data)
