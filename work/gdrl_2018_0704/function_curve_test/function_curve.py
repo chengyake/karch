@@ -39,6 +39,10 @@ class FC:
             print("vvvvvvvvvvvvvvvvvvvvvvv")
             exit()
 
+        if 1.0/np.mean(np.abs(self.y-_y)) > 8:
+            print(args)
+            exit()
+
         return 1.0/np.mean(np.abs(self.y-_y))
         
 

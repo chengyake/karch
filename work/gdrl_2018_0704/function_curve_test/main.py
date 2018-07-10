@@ -11,8 +11,7 @@ num_best = 5
 num_drop = num_best*2
 
 num_exchange = 25   #list sample
-num_mutation = 5
-
+num_mutation = 15
 
 
 class genetic_algo:
@@ -21,8 +20,10 @@ class genetic_algo:
         self.genes_score = {}
         self.gdrl = FC()
         self.genes = np.random.randint(2,size=(num_all, self.gdrl.layer_num, self.gdrl.layer_nodes, self.gdrl.layer_nodes))
-        self.probility_exchange = 0.9 #inter cell, genes sample
-        self.probility_mutation = 0.1
+        self.probility_exchange1 = 0.001 #inter cell, genes sample
+        self.probility_exchange2 = 0.1
+        self.probility_mutation1 = 0.001
+        self.probility_mutation2 = 0.1
         return
 
     def calc_score(self):
@@ -47,8 +48,8 @@ class genetic_algo:
         sys.stdout.flush()
         return
     
-    def _exchange_genes(self, idx1, idx2):
-        is_sw = np.random.randint(1,int(1/self.probility_exchange)+1, size=(self.gdrl.layer_num, 1, self.gdrl.layer_nodes))
+    def _exchange_genes(self, idx1, idx2, prob):
+        is_sw = np.random.randint(1,int(1/prob)+1, size=(self.gdrl.layer_num, 1, self.gdrl.layer_nodes))
         is_sw[is_sw>1]=0
         tmp = copy.deepcopy(self.genes[idx1])
         self.genes[idx1]=np.where(is_sw>0, self.genes[idx2], self.genes[idx1])
@@ -61,11 +62,16 @@ class genetic_algo:
         ex_list.extend(self.idx_drop[:int(num_drop/2)])
         random.shuffle(ex_list)
         for i in range(int(len(ex_list)/2)):
-            self._exchange_genes(ex_list[i*2][0], ex_list[i*2+1][0])
+            if ex_list[i*2][1] > ex_list[i*2+1][1]:
+                s = ex_list[i*2][1]
+            else:
+                s = ex_list[i*2+1][1]
+            prob = self.probility_exchange2-(self.probility_exchange2-self.probility_exchange1)*(self.idx_sorted[-1][1]-s)/(self.idx_sorted[-1][1] - self.idx_sorted[0][1])
+            self._exchange_genes(ex_list[i*2][0], ex_list[i*2+1][0], prob)
         return
 
-    def _genes_mutation(self, idx):
-        is_mu = np.random.randint(1,int(1/self.probility_mutation)+1, size=(self.gdrl.layer_num, self.gdrl.layer_nodes, self.gdrl.layer_nodes))
+    def _genes_mutation(self, idx, prob=0.1):
+        is_mu = np.random.randint(1,int(1/prob)+1, size=(self.gdrl.layer_num, self.gdrl.layer_nodes, self.gdrl.layer_nodes))
         is_mu[is_mu>1]=0
         self.genes[idx]+=is_mu
         self.genes[self.genes>1]=0
@@ -76,7 +82,8 @@ class genetic_algo:
         mu_list = random.sample(self.idx_sorted[int(num_drop/2):-num_best], num_mutation)
         mu_list.extend(self.idx_drop[int(num_drop/2):])
         for i in range(len(mu_list)):
-            self._genes_mutation(mu_list[i][0])
+            prob = self.probility_mutation2-(self.probility_mutation2-self.probility_mutation1)*(self.idx_sorted[-1][1]-mu_list[i][1])/(self.idx_sorted[-1][1] - self.idx_sorted[0][1])
+            self._genes_mutation(mu_list[i][0], prob)
         return
 
 
