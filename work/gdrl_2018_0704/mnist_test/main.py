@@ -21,7 +21,7 @@ num_best = 5
 num_drop = num_best*2
 
 num_exchange = 15   #list sample
-num_mutation = 5
+num_mutation = 15
 
 
 class genetic_algo:
@@ -40,8 +40,8 @@ class genetic_algo:
             genes = np.random.randint(1, (self.gdrl.layer_num*self.gdrl.layer_nodes*self.gdrl.layer_nodes)/self.gdrl.con_num, size=(num_all, self.gdrl.layer_num, self.gdrl.layer_nodes, self.gdrl.layer_nodes))
             genes[genes>1]=0
             self.genes = genes.astype(np.int8)
-        for i in range(num_all):
-            self.genes[i] = self.adjust_connections(self.genes[i], self.gdrl.con_num)
+            for i in range(num_all):
+                self.genes[i] = self.adjust_connections(self.genes[i], self.gdrl.con_num)
         return
 
     def restore_genes(self):
