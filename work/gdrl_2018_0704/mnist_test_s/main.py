@@ -18,7 +18,11 @@ from gdrl import DL
 
 #individual
 num_all  = 60
+<<<<<<< HEAD
 num_best = 8
+=======
+num_best = 5
+>>>>>>> a5f9a7b49dab0c9f24836822eb617775863f2cc1
 num_drop = num_best*2
 
 num_exchange = 15   #list sample
