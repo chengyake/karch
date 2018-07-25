@@ -29,13 +29,21 @@ class DL:
     learning_rate = 0.1
     training_iters = batch_size*1000
 
-    num_nodes = [784, 256, 256, 256, 256, 10] #must > =3
+    num_nodes = [784, 128, 10] #must > =3
     num_con_s = [(num_nodes[0],num_nodes[1]),
-                 (num_nodes[1],num_nodes[2]),
-                 (num_nodes[2],num_nodes[3]),
-                 (num_nodes[3],num_nodes[4]),
-                 (num_nodes[4],num_nodes[5])]
+                 (num_nodes[1],num_nodes[2])]
     num_con_h = [512, 512, 512, 512, 512]
+
+
+#    num_nodes = [784, 256, 256, 256, 256, 10] #must > =3
+#    num_con_s = [(num_nodes[0],num_nodes[1]),
+#                 (num_nodes[1],num_nodes[2]),
+#                 (num_nodes[2],num_nodes[3]),
+#                 (num_nodes[3],num_nodes[4]),
+#                 (num_nodes[4],num_nodes[5])]
+#    num_con_h = [512, 512, 512, 512, 512]
+
+
     num_layer = len(num_nodes)
     
     def __init__(self):
@@ -116,7 +124,7 @@ class DL:
         
         batch_x, batch_y = self.data.get_val_batch()
         pre = np.random.random((batch_y.shape[0], 2))
-        acc = np.mean(np.argmax(pre ,-1)*batch_y)
+        acc = np.mean(np.equal(np.argmax(pre ,-1), np.argmax(batch_y, -1)))
         print("Random Test accuracy:", acc)
 
     def test(self, genes):
@@ -190,6 +198,15 @@ class DL:
                 if score2 > max_score:
                     max_score = score2
                 print("yakelog:%.4f\t%.4f\t%.4f" % (score1, score2, max_score))
+                
+
+                if score2 >=0.96 :
+                    print(self.soft_conw["in"].eval())
+                    print(self.soft_conb["in"].eval())
+                    print(self.soft_conw["out"].eval())
+                    print(self.soft_conb["out"].eval())
+                    exit()
+
 
         tf.reset_default_graph()
 
@@ -198,22 +215,23 @@ class DL:
 
 
 
-    
-
 if __name__ == '__main__':
     
     dl = DL()
-    hw=[]
-    hb=[]
-    sw=[]
-    sb=[]
-    for i in range(dl.num_layer-1):
-        hw.append( np.random.random(dl.num_con_s[i]).astype(np.float32) )
-        hb.append( np.random.random(dl.num_con_s[i][1]).astype(np.float32) )
-        sw.append( np.ones((dl.num_con_s[i]), dtype=np.float32) )
-        sb.append( np.ones((dl.num_con_s[i][1]), dtype=np.float32) )
-    dl.train(hw,hb,sw,sb)
-
+    test_mode=1
+    if test_mode == 1:
+        hw=[]
+        hb=[]
+        sw=[]
+        sb=[]
+        for i in range(dl.num_layer-1):
+            hw.append( np.random.random(dl.num_con_s[i]).astype(np.float32) )
+            hb.append( np.random.random(dl.num_con_s[i][1]).astype(np.float32) )
+            sw.append( np.ones((dl.num_con_s[i]), dtype=np.float32) )
+            sb.append( np.ones((dl.num_con_s[i][1]), dtype=np.float32) )
+        dl.train(hw,hb,sw,sb)
+    elif test_mode == 2:
+        dl.random_test()
 
 
 
