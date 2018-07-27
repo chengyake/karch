@@ -13,17 +13,15 @@ from StoreImageToMem import Memimages
 
 learning_rate = 0.001
 training_iters = 2400000000
-batch_size = 30
+batch_size = 24
 display_step = 10
 save_model_step=100
-HW=287
+HW=256
 is_training=True
-#is_training=False
+is_training=False
 
 x = tf.placeholder(tf.float32, [None, HW,HW,3])
-y = tf.placeholder(tf.float32, [None, HW,HW,4])
-#k = tf.placeholder(tf.float32)
-#c = tf.placeholder(tf.uint8, [1, HW,HW,3])
+y = tf.placeholder(tf.float32, [None, HW/4,HW/4,4])
 
 
 
@@ -42,7 +40,7 @@ def bn_layer(inputs,is_training,name='BatchNorm',moving_decay=0.9,eps=1e-5):
         batch_mean, batch_var = tf.nn.moments(inputs,[0,1,2],name='moments')
         mean = tf.assign(mean, batch_mean)
         var = tf.assign(var, batch_var)
-        return tf.nn.batch_normalization(inputs,batch_mean+mean*1e-8,batch_var+var*1e-8,gamma,beta,eps)
+        return tf.nn.batch_normalization(inputs,batch_mean+mean*1e-5,batch_var+var*1e-5,gamma,beta,eps)
     else:
         return tf.nn.batch_normalization(inputs,mean,var,gamma,beta,eps)
 
@@ -80,7 +78,7 @@ def conv2d_2(name, inputs, shape, strides=2):
     
     with tf.name_scope(name+"_conv"):
         W = tf.Variable(tf.random_normal(shape))
-        x1 = tf.nn.conv2d(inputs, W, strides=[1, strides, strides, 1], padding='VALID', name="conv2") #same ???
+        x1 = tf.nn.conv2d(inputs, W, strides=[1, strides, strides, 1], padding='SAME', name="conv2")
 
     with tf.name_scope(name+"_bias"):
         B = tf.Variable(tf.random_normal([shape[-1]]))
@@ -103,13 +101,11 @@ def conv_add(name, a1, a2):
 
 def upscale2(name, inputs, filters, output_shape):
     with tf.name_scope(name):
-        deconv = tf.layers.conv2d_transpose(inputs, filters, 3, 2, "VALID")
+        x1 = tf.layers.conv2d_transpose(inputs, filters, 3, 2, "SAME", trainable = is_training)
         #deconv = tf.contrib.layers.conv2d_transpose(inputs, filters, 3, 2, "VALID", trainable=is_training)
-        #print(inputs.shape)
-        #print(inputs.shape[1]*2+1)
-        #W = tf.Variable(tf.random_normal([3, 3, filters, inputs.shape[-1]]))
-        #deconv = tf.nn.conv2d_transpose(inputs, filter=W, output_shape=output_shape, strides=[1,2,2,1], padding='VALID')
-    return deconv
+    with tf.name_scope(name+"_BN"):
+        x2 = bn_layer(x1, is_training, name=name)
+        return x2
 
 def dropout(name, inputs, keep_prob):
     with tf.name_scope(name):
@@ -120,15 +116,17 @@ def dropout(name, inputs, keep_prob):
 def yake_net(inputs):
 
     conv0 = tf.reshape(inputs, shape=[-1, HW, HW, 3], name="reshape")  #N,HW,HW,3
-    conv1 = conv2d_1('layer1',  conv0,  [3,3,  3, 32]) #n,HW,HW,32
+    with tf.name_scope("div"):
+        convd = tf.multiply(conv0, 0.003921569)#1/255
+    conv1 = conv2d_1('layer1',  convd,  [3,3,  3, 32]) #n,HW,HW,32
 
-    conv2 = conv2d_2('layer2',  conv1,  [3,3, 32, 64]) #n,143,143
-    conv3 = conv2d_1('layer3',  conv2,  [1,1, 64, 32]) # 1
+    conv2 = conv2d_2('layer2',  conv1,  [3,3, 32, 64]) #n,128,128
+    conv3 = conv2d_1('layer3',  conv2,  [1,1, 64, 32]) #1
     conv4 = conv2d_1('layer4',  conv3,  [3,3, 32, 64]) 
     ladd5 = conv_add('layer5',  conv2,  conv4)
 
 
-    conv6 = conv2d_2('layer6',  ladd5,  [3,3, 64,128]) #n,71,71
+    conv6 = conv2d_2('layer6',  ladd5,  [3,3, 64,128]) #n,64,64
     conv7 = conv2d_1('layer7',  conv6,  [1,1,128, 64]) #1
     conv8 = conv2d_1('layer8',  conv7,  [3,3, 64,128]) 
     ladd9 = conv_add('layer9',  conv6,  conv8)
@@ -137,7 +135,7 @@ def yake_net(inputs):
     ladd12= conv_add('layer12', conv11, ladd9)
 
 
-    conv19= conv2d_2('layer19', ladd12, [3,3,128,128]) #n,35,35
+    conv19= conv2d_2('layer19', ladd12, [3,3,128,128]) #n,32,32
     conv20= conv2d_1('layer20', conv19, [1,1,128,64]) #1
     conv21= conv2d_1('layer21', conv20, [3,3,64,128]) 
     ladd22= conv_add('layer22', conv21, conv19)
@@ -153,7 +151,7 @@ def yake_net(inputs):
 
 
 
-    conv32= conv2d_2('layer32', ladd31, [3,3,128,128]) #n,17,17
+    conv32= conv2d_2('layer32', ladd31, [3,3,128,128]) #n,16,16
     conv33= conv2d_1('layer33', conv32, [1,1,128,64]) 
     conv34= conv2d_1('layer34', conv33, [3,3,64,128]) 
     ladd35= conv_add('layer35', conv34, conv32)
@@ -177,11 +175,12 @@ def yake_net(inputs):
     convM24= conv2d_1('layerM24', convM23, [3,3,64, 128]) 
     laddM25= conv_add('layerM25', convM24, laddM22)
 
-    deconF2= upscale2("deconF2", laddM25, 128, 3)
+    deconF2= upscale2("deconF2", laddM25, 128, 3)#16
+    laddF1 = conv_add("layerF1", deconF2, laddB4)
     #with tf.name_scope('deconF2'):
     #    W1 = tf.Variable(tf.random_normal([3, 3, 128, 128]))
     #    deconF2 = tf.nn.conv2d_transpose(laddM25, filter=W1, output_shape=[batch_size, 17,17,128], strides=[1,2,2,1], padding='VALID')
-    convF3 = conv2d_1('layerF3', deconF2, [1,1,128,64]) 
+    convF3 = conv2d_1('layerF3', laddF1, [1,1,128,64]) 
     convF4 = conv2d_1('layerF4', convF3,  [3,3,64,128]) 
     laddF5 = conv_add('layerF5', convF4,  deconF2)
     convF6 = conv2d_1('layerF6', laddF5,  [1,1,128,64]) 
@@ -189,51 +188,32 @@ def yake_net(inputs):
     laddF8 = conv_add('layerF8', convF7,  laddF5)
 
 
-    deconG2= upscale2("deconG2", laddF8, 128, 3)
+    deconG2= upscale2("deconG2", laddF8, 128, 3)#32
+    laddG1 = conv_add("layerG1", deconG2, ladd31)
     #with tf.name_scope('deconG2'):
     #    W2 = tf.Variable(tf.random_normal([3, 3, 128, 128]))
     #    deconG2 = tf.nn.conv2d_transpose(laddF8, filter=W2, output_shape=[batch_size, 35,35,128], strides=[1,2,2,1], padding='VALID')
-    convG3 = conv2d_1('layerG3', deconG2, [1,1,128,64]) 
+    convG3 = conv2d_1('layerG3', laddG1, [1,1,128,64]) 
     convG4 = conv2d_1('layerG4', convG3,  [3,3,64,128]) 
     laddG5 = conv_add('layerG5', convG4,  deconG2)
     convG6 = conv2d_1('layerG6', laddG5,  [1,1,128,64]) 
     convG7 = conv2d_1('layerG7', convG6,  [3,3,64,128]) 
     laddG8 = conv_add('layerG8', convG7,  laddG5)
 
-    deconH2= upscale2("deconH2", laddG8, 64, 3)
+    deconH2= upscale2("deconH2", laddG8, 128, 3)#64
+    laddH1 = conv_add("layerH1", deconH2, ladd12)
     #with tf.name_scope('deconH2'):
     #    W3 = tf.Variable(tf.random_normal([3, 3, 64, 128]))
     #    deconH2 = tf.nn.conv2d_transpose(laddG8, filter=W3, output_shape=[batch_size, 71,71,64], strides=[1,2,2,1], padding='VALID')
-    convH3 = conv2d_1('layerH3', deconH2, [1,1,64,32]) 
-    convH4 = conv2d_1('layerH4', convH3,  [3,3,32,64]) 
+    convH3 = conv2d_1('layerH3', laddH1, [1,1,128,64]) 
+    convH4 = conv2d_1('layerH4', convH3,  [3,3,64,128]) 
     laddH5 = conv_add('layerH5', convH4,  deconH2)
-    convH6 = conv2d_1('layerH6', laddH5,  [1,1,64,32]) 
-    convH7 = conv2d_1('layerH7', convH6,  [3,3,32,64]) 
+    convH6 = conv2d_1('layerH6', laddH5,  [1,1,128,64]) 
+    convH7 = conv2d_1('layerH7', convH6,  [3,3,64,128]) 
     laddH8 = conv_add('layerH8', convH7,  laddH5)
 
-    deconK2= upscale2("deconK2", laddH8, 32, 3)
-    #with tf.name_scope('deconK2'):
-    #    W4 = tf.Variable(tf.random_normal([3, 3, 32, 64]))
-    #    deconK2 = tf.nn.conv2d_transpose(laddH8, filter=W4, output_shape=[batch_size, 143,143,32], strides=[1,2,2,1], padding='VALID')
-    convK3 = conv2d_1('layerK3', deconK2, [1,1,32,16]) 
-    convK4 = conv2d_1('layerK4', convK3,  [3,3,16,32]) 
-    laddK5 = conv_add('layerK5', convK4,  deconK2)
-    convK6 = conv2d_1('layerK6', laddK5,  [1,1,32,16]) 
-    convK7 = conv2d_1('layerK7', convK6,  [3,3,16,32]) 
-    laddK8 = conv_add('layerK8', convK7,  laddK5)
-
-    deconZ2= upscale2("deconZ2", laddK8, 16, 3)
-    #with tf.name_scope('deconZ2'):
-    #    W5 = tf.Variable(tf.random_normal([3, 3, 16, 32]))
-    #    deconZ2 = tf.nn.conv2d_transpose(laddK8, filter=W5, output_shape=[batch_size, 287,287,16], strides=[1,2,2,1], padding='VALID')
-    convZ3 = conv2d_1('layerZ3', deconZ2, [1,1,16,8]) 
-    convZ4 = conv2d_1('layerZ4', convZ3,  [3,3,8,16]) 
-    laddZ5 = conv_add('layerZ5', convZ4,  deconZ2)
-    convZ6 = conv2d_1('layerZ6', laddZ5,  [1,1,16,8]) 
-    convZ7 = conv2d_1('layerZ7', convZ6,  [3,3,8,16]) 
-    laddZ8 = conv_add('layerZ8', convZ7,  laddZ5)
-
-    convZ9 = conv2d_1('layerZ9', laddZ8,  [1,1,16,4]) 
+  
+    convZ9 = conv2d_1('layerZ9', laddH8,  [1,1,128,4]) 
 
     #with tf.name_scope("output"):
     out = tf.sigmoid(convZ9, "sigmoid")
@@ -255,22 +235,19 @@ pred_b=pred[:,:,:,2:]
 y_b=y[:,:,:,2:]
 
 
-cast1_a = tf.reduce_sum(tf.abs(y_a-pred_a), axis=-1)
-cast1_b = tf.reduce_sum(y_a, axis=-1)-0.0019
-cast1 = tf.reduce_mean(cast1_a*cast1_b)*10000
 
+cast1_a = tf.reduce_sum(tf.abs(y_a-pred_a), axis=-1)
+cast1_b = (tf.reduce_sum(y_a, axis=-1)-0.002)/10.0*9.0+0.1
+#cast1_b = tf.reduce_sum(y_a, axis=-1)-0.0019
+
+#cast1_a = tf.abs(y_a-pred_a)
+#cast1_b = tf.abs(y_a-0.0019)
+
+cast1 = tf.reduce_mean(tf.pow(2.7, cast1_a*cast1_b))*10000
 
 cast2_a = tf.reduce_sum(tf.abs(y_b-pred_b), axis=-1)
 cast2_b = tf.reduce_sum(y_a, axis=-1)-0.002
 cast2 = tf.reduce_mean(cast2_a*cast2_b)*10000
-
-
-
-
-#class_loss
-#cast1 = tf.reduce_mean(tf.pow(2.7, tf.abs(y_a-pred_a)*y_a)-1)
-#box loss
-#cast2 = tf.reduce_mean(tf.reduce_mean(tf.pow(4.0, tf.abs(y_b-pred_b))-1, axis=-1) * (tf.reduce_sum(y_a, axis=-1)-0.002))
 
 cast = cast1+cast2
 
@@ -291,20 +268,23 @@ saver = tf.train.Saver(tf.global_variables())
 def write_photo(batch_x, lab, name):
 
     img=batch_x[0].copy()
-    img*=255
 
     rate = lab[0,:,:,:2]/np.expand_dims(np.sum(lab[0,:,:,:2], axis=-1), axis=-1)
-    ij = np.where(rate[:,:,:2]==np.max(rate[:,:,:2]))
-    i=ij[0][0]
-    j=ij[1][0]
+    #rate = lab[0,:,:,:2]
+    #rate = np.abs(lab[0,:,:,:2]-0.999)
+
+
+    ij = np.where(rate[2:-2,2:-2,:]==np.max(rate[2:-2,2:-2,:]))
+    i=ij[0][0]+2
+    j=ij[1][0]+2
     index=ij[2][0]
 
     if np.sum(lab[0,i,j,:2]) >=0.9:
         w = int(lab[0,i,j,2]*HW) 
         h = int(lab[0,i,j,3]*HW)
-        percent = rate[i,j,index]
-        cv2.rectangle(img, (j-w, i-h), (j+w, i+h), (0,255,0), 1)
-        cv2.putText(img,memimg.classes[index]+"%0.3f" % percent, (j,i),cv2.FONT_HERSHEY_COMPLEX_SMALL,0.8,(0,255,0), 1)
+        percent = lab[0,i,j,index]
+        cv2.rectangle(img, (j*4-w+2, i*4+2-h), (j*4+w+2, i*4+h+2), (0,255,0), 1)
+        cv2.putText(img,memimg.classes[index]+"%0.3f" % percent, (j*4+2,i*4+2),cv2.FONT_HERSHEY_COMPLEX_SMALL,0.8,(0,255,0), 1)
     cv2.imwrite(name, img)
     return np.expand_dims(img, 0)
 

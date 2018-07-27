@@ -8,7 +8,7 @@ import xml.etree.ElementTree as et
 
 
 
-HW=287
+HW=256
 
 
 class Memimages:
@@ -38,7 +38,7 @@ class Memimages:
             rate=1.0
             flag=''
             ivl=[]
-            vnp=np.ones((HW,HW,4))*0.001
+            vnp=np.ones((64,64,4))*0.001
             data = np.ones((HW,HW,3))*128
             img_np=cv2.imread(img_dir+"/"+img_list[i])
             h,w,c=img_np.shape
@@ -52,7 +52,7 @@ class Memimages:
             img =cv2.resize(img_np, (new_w, new_h))
             #print(data.shape, img.shape, h,w,c,rate)
             data[int(HW/2-new_h/2) : int(HW/2+new_h/2), int(HW/2-new_w/2) : int(HW/2+new_w/2)] = img
-            img =data.astype("float32")/255.0
+            img =data.astype("float32")
 
             img_np=cv2.imread(xml_dir+"/"+xml_list[i])
 
@@ -88,8 +88,8 @@ class Memimages:
                 center_w = (xmax-xmin)/2
                 center_h = (ymax-ymin)/2
 
-                cyi = int(center_y*HW)
-                cxi = int(center_x*HW)
+                cyi = int(center_y*HW/4)
+                cxi = int(center_x*HW/4)
 
                 vnp[cyi][cxi][class_id]=0.999
                 vnp[cyi][cxi][2]=center_w
@@ -112,9 +112,20 @@ class Memimages:
 
 
     def get_batch(self, size):
+        r = random.randint(0,4)
         rdata = random.sample(list(self.train_list), size)
         x=np.array([i[0] for i in rdata])
         y=np.array([i[1] for i in rdata])
+        if r == 1:
+            x=x[:,::-1,:,:]
+            y=y[:,::-1,:,:]
+        if r == 2:
+            x=x[:,:,::-1,:]
+            y=y[:,:,::-1,:]
+        if r == 3:
+            x=x[:,::-1,::-1,:]
+            y=y[:,::-1,::-1,:]
+
         return x,y
         
 
@@ -146,18 +157,19 @@ if __name__ == '__main__':
     test_mode=2
 
     if test_mode==2:
-        img,lab = test.get_val(64)
+        img,lab = test.get_batch(64)
+        #img,lab = test.get_val(64)
         img=img[0].copy()
-        img=img*255
+        img=img
         
         rate = lab[0,:,:,:2]/np.expand_dims(np.sum(lab[0,:,:,:2], axis=-1), axis=-1)
-        for i in range(HW):
-            for j in range(HW):
+        for i in range(HW/4):
+            for j in range(HW/4):
                 if np.sum(lab[0,i,j,:2]) >=0.9:
                     index = np.where(rate[i,j,:2]==np.max(rate[i,j,:2]))
                     w = int(lab[0,i,j,2]*HW) 
                     h = int(lab[0,i,j,3]*HW)
                     percent = rate[i,j,index[0][0]]
-                    cv2.rectangle(img, (j-w, i-h), (j+w, i+h), (0,255,0), 1)
-                    cv2.putText(img,test.classes[index[0][0]]+"%0.3f" % percent, (j-w,i-h),cv2.FONT_HERSHEY_COMPLEX_SMALL,0.8,(0,255,0), 1)
+                    cv2.rectangle(img, (j*4-w, i*4-h), (j*4+w, i*4+h), (0,255,0), 1)
+                    cv2.putText(img,test.classes[index[0][0]]+"%0.3f" % percent, (j*4-w,i*4-h),cv2.FONT_HERSHEY_COMPLEX_SMALL,0.8,(0,255,0), 1)
         cv2.imwrite("test_train.png", img)
