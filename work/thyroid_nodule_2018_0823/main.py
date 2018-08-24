@@ -11,9 +11,9 @@ from data import DATA
 
 
 
-learning_rate = 0.001
+learning_rate = 0.01
 training_iters = 2400000000
-batch_size = 16
+batch_size = 32
 display_step = 10
 save_model_step=100
 HW=256
@@ -162,14 +162,14 @@ def yake_net(inputs):
 
     block2 = res_net("block2", block1, 1,  32,  64)     #n,128,128, 64
     block3 = res_net("block3", block2, 2,  64, 128)     #n, 64, 64, 128
-    block4 = res_net("block4", block3, 8, 128, 256)     #n, 32, 32, 256
-    block5 = res_net("block5", block4, 8, 256, 512)     #n, 16, 16, 512
-    block6 = res_net("block6", block5, 4, 512,1024)     #n,  8,  8, 1024
+    block4 = res_net("block4", block3, 6, 128, 128)     #n, 32, 32, 256
+    block5 = res_net("block5", block4, 6, 128, 128)     #n, 16, 16, 512
+    block6 = res_net("block6", block5, 3, 128, 128)     #n,  8,  8, 1024
 
-    block7 = upscale2("block7", block6, 512)             #n, 16, 16, 512
-    block8 = res_net1("block8", block7,2, 256, 512)
-    block9 = upscale2("block9", block8, 256)             #n, 32, 32, 256
-    blockA = res_net1("blockA", block9,2, 128, 256)
+    block7 = upscale2("block7", block6, 128)             #n, 16, 16, 512
+    block8 = res_net1("block8", block7,2, 128, 128)
+    block9 = upscale2("block9", block8, 128)             #n, 32, 32, 256
+    blockA = res_net1("blockA", block9,2, 128, 128)
     blockB = upscale2("blockB", blockA, 128)             #n, 64, 64, 128
     blockC = res_net1("blockC", blockB,2, 64, 128)
     blockD = upscale2("blockD", blockC,  64)             #n,128,128, 64
@@ -183,8 +183,7 @@ def yake_net(inputs):
     out = tf.sigmoid(blockZ, "sigmoid")
 
     tf.summary.image("input0", inputs[:1,:,:,:])
-    tf.summary.image("output" , out[:1,:,:,:]*255)
-    tf.summary.image("ground",   y[:1,:,:,:]*255)
+    tf.summary.image("output" , (y[:1,:,:,:]+out[:1,:,:,:])/2.0*255)
     return out
 
 
@@ -193,8 +192,7 @@ pred = yake_net(x)
 
 
 
-cast = tf.reduce_mean(tf.abs(pred-y)*(y+0.0001))
-#cast = tf.reduce_mean(tf.pow(2.7, tf.abs(pred-y)*(y+0.0001)*1.0))
+cast = tf.reduce_mean(tf.abs((pred-y)*(y+0.004)))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cast)
 l2 = tf.add_n(tf.get_collection('l2_losses'))
 
@@ -246,16 +244,16 @@ with tf.Session() as sess:
     while step * batch_size < training_iters:
         step += 1
         batch_x, batch_y = data.get_train_batch(batch_size)
-        train_loss, _ =sess.run([cast, optimizer], feed_dict={x: batch_x, y: batch_y})
+        train_loss, _ =sess.run([cast, optimizer], feed_dict={x: batch_x, y255: batch_y})
         
         if step % display_step==0:
             #calc train loss
-            train_loss, p, rs=sess.run([cast, pred, merged], feed_dict={x: batch_x, y: batch_y})
+            train_loss, p, rs=sess.run([cast, pred, merged], feed_dict={x: batch_x, y255: batch_y})
             train_writer.add_summary(rs, step)
             write_photo(batch_x, p, "train.png")
             #calc val loss
             batch_x, batch_y = data.get_val_batch(batch_size)
-            val_loss, p, rs=sess.run([cast, pred, merged], feed_dict={x: batch_x, y: batch_y})
+            val_loss, p, rs=sess.run([cast, pred, merged], feed_dict={x: batch_x, y255: batch_y})
             test_writer.add_summary(rs, step)
             write_photo(batch_x, p, 'val.png')
             print("Iter " + str(step*batch_size) + ", Train Loss= "+"{:.6f}".format(train_loss)+", Val Loss= "+"{:.6f}".format(val_loss))
